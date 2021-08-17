@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:mysql://47.99.116.208:3306/insurance
+    username: insurance
+    password: crRhSzmJms7dnPbE
+    driverClassName: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  type-aliases-package: cn.wghtstudio.insurance.dao.entity
+  config-location: classpath:mybatis/mybatis-config.xml
+  mapper-locations: classpath:mybatis/mapper/*.xml
