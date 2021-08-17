@@ -1,4 +1,4 @@
-package cn.wghtstudio.insurance.Interceptor;
+package cn.wghtstudio.insurance.interceptor;
 
 import cn.wghtstudio.insurance.util.Result;
 import cn.wghtstudio.insurance.util.ResultEnum;
