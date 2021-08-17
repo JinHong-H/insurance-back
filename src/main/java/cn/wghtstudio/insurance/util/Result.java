@@ -1,16 +1,6 @@
 package cn.wghtstudio.insurance.util;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
-enum ResultMsg {
-    SUCCESS_MSG("成功"), ERROR_MSG("失败");
-
-    private String msg;
-}
 
 @Data
 public class Result<V> {
@@ -21,7 +11,7 @@ public class Result<V> {
     public static <T> Result<T> success(T data) {
         final Result<T> result = new Result<>();
         result.setCode(0);
-        result.setMsg(ResultMsg.SUCCESS_MSG.getMsg());
+        result.setMsg(ResultEnum.SUCCESS.getMsg());
         result.setData(data);
 
         return result;
@@ -30,16 +20,34 @@ public class Result<V> {
     public static Result<Void> success() {
         final Result<Void> result = new Result<>();
         result.setCode(0);
-        result.setMsg(ResultMsg.SUCCESS_MSG.getMsg());
+        result.setMsg(ResultEnum.SUCCESS.getMsg());
         result.setData(null);
+
+        return result;
+    }
+
+    public static <T> Result<T> error(ResultEnum resultEnum) {
+        final Result<T> result = new Result<>();
+        result.setCode(resultEnum.getCode());
+        result.setMsg(resultEnum.getMsg());
+        result.setData(null);
+
+        return result;
+    }
+
+    public static <T> Result<T> error(ResultEnum resultEnum, T data) {
+        final Result<T> result = new Result<>();
+        result.setCode(resultEnum.getCode());
+        result.setMsg(resultEnum.getMsg());
+        result.setData(data);
 
         return result;
     }
 
     public static <T> Result<T> error(T data) {
         final Result<T> result = new Result<>();
-        result.setCode(0);
-        result.setMsg(ResultMsg.ERROR_MSG.getMsg());
+        result.setCode(ResultEnum.DEFAULT_ERROR.getCode());
+        result.setMsg(ResultEnum.DEFAULT_ERROR.getMsg());
         result.setData(data);
 
         return result;
@@ -47,8 +55,8 @@ public class Result<V> {
 
     public static Result<Void> error() {
         final Result<Void> result = new Result<>();
-        result.setCode(0);
-        result.setMsg(ResultMsg.ERROR_MSG.getMsg());
+        result.setCode(ResultEnum.DEFAULT_ERROR.getCode());
+        result.setMsg(ResultEnum.DEFAULT_ERROR.getMsg());
         result.setData(null);
 
         return result;

@@ -4,3 +4,8 @@ spring:
     username: insurance
     password: crRhSzmJms7dnPbE
     driverClassName: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  type-aliases-package: cn.wghtstudio.insurance.dao.entity
+  config-location: classpath:mybatis/mybatis-config.xml
+  mapper-locations: classpath:mybatis/mapper/*.xml
