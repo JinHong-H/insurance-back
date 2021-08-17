@@ -1,14 +1,13 @@
 package cn.wghtstudio.insurance.controller;
 
-import org.springframework.stereotype.Controller;
+import cn.wghtstudio.insurance.util.Result;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
 public class LoginController {
-  @ResponseBody
-  @PostMapping("/login")
-  public String Login() {
-    return "login";
-  }
+    @PostMapping("/login")
+    public Result<String> Login() {
+        return Result.success("login");
+    }
 }
