@@ -9,6 +9,7 @@ public enum ResultEnum {
     SUCCESS(0, "请求成功"),
     DEFAULT_ERROR(10001, "请求失败"),
     ARGUMENT_ERROR(10002, "参数错误"),
+    SIGN_TOKEN_ERROR(10003, "生成签名失败"),
     PASSWORD_ERROR(20001, "密码错误"),
     USER_NOT_FOUND(20002, "用户未找到");
 

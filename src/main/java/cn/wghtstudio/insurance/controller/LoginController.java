@@ -1,6 +1,7 @@
 package cn.wghtstudio.insurance.controller;
 
 import cn.wghtstudio.insurance.exception.PasswordErrorException;
+import cn.wghtstudio.insurance.exception.SignTokenException;
 import cn.wghtstudio.insurance.exception.UserNotFoundException;
 import cn.wghtstudio.insurance.service.LoginService;
 import cn.wghtstudio.insurance.service.entity.LoginResponseBody;
@@ -39,6 +40,10 @@ public class LoginController {
             return Result.error(ResultEnum.PASSWORD_ERROR);
         } catch (UserNotFoundException e) {
             return Result.error(ResultEnum.USER_NOT_FOUND);
+        } catch (SignTokenException e) {
+            return Result.error(ResultEnum.SIGN_TOKEN_ERROR);
+        } catch (Exception e) {
+            return Result.error(ResultEnum.DEFAULT_ERROR);
         }
     }
 }
