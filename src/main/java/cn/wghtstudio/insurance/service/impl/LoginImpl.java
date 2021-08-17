@@ -6,6 +6,7 @@ import cn.wghtstudio.insurance.exception.PasswordErrorException;
 import cn.wghtstudio.insurance.exception.UserNotFoundException;
 import cn.wghtstudio.insurance.service.entity.LoginResponseBody;
 import cn.wghtstudio.insurance.service.LoginService;
+import cn.wghtstudio.insurance.service.entity.LoginResponseBodyBuilder;
 import cn.wghtstudio.insurance.util.PasswordMD5;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +28,6 @@ public class LoginImpl implements LoginService {
             throw new PasswordErrorException();
         }
 
-        return new LoginResponseBody();
+        return LoginResponseBodyBuilder.getInstance().build();
     }
 }
