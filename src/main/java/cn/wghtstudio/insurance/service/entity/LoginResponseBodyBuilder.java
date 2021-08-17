@@ -4,6 +4,7 @@ public class LoginResponseBodyBuilder {
     private String token;
     private int id;
     private String username;
+    private int role;
 
     public LoginResponseBodyBuilder withToken(String token) {
         this.token = token;
@@ -20,11 +21,17 @@ public class LoginResponseBodyBuilder {
         return this;
     }
 
+    public LoginResponseBodyBuilder withRole(int role) {
+        this.role = role;
+        return this;
+    }
+
     public LoginResponseBody build() {
         LoginResponseBody loginResponseBody = new LoginResponseBody();
         loginResponseBody.setUsername(username);
         loginResponseBody.setId(id);
         loginResponseBody.setToken(token);
+        loginResponseBody.setRole(role);
         return loginResponseBody;
     }
 
