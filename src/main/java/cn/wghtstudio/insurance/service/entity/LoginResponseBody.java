@@ -4,5 +4,6 @@ import lombok.Data;
 
 @Data
 public class LoginResponseBody {
-    private String token;
+	private String auth;
+	private String token;
 }
