@@ -9,13 +9,12 @@ import cn.wghtstudio.insurance.service.LoginService;
 import cn.wghtstudio.insurance.util.PasswordMD5;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
+
 @Component
 public class LoginImpl implements LoginService {
+    @Resource
     UserRepository userRepository;
-
-    public LoginImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     @Override
     public LoginResponseBody UserLoginService(String username, String password)
