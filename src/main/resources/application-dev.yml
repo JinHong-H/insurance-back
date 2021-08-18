@@ -10,6 +10,15 @@ mybatis:
   config-location: classpath:mybatis/mybatis-config.xml
   mapper-locations: classpath:mybatis/mapper/*.xml
 
+logging:
+  level:
+    web: debug
+    cn:
+      wghtstudio:
+        insurance:
+          dao:
+            repository: debug
+
 token:
   expireDate: 10800000
   secret: InsuranceBack
