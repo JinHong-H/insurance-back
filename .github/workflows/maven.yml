@@ -28,7 +28,7 @@ jobs:
       with:
         local: target/insurance-0.0.1-SNAPSHOT.jar
         remote: ${{ secrets.REMOTE_TARGET }}
-        host: ${{ secrets.HOST }}
+        host: ${{ secrets.REMOTE_HOST }}
         username: ${{ secrets.REMOTE_USER }}
         privateKey : ${{ secrets.SERVER_SSH_KEY }}
     - name: Exec our backend spring boot app
@@ -36,6 +36,6 @@ jobs:
       with:
         command: |
           java -jar ${{ secrets.REMOTE_TARGET }} --spring.profiles.active=dev &
-        host: ${{ secrets.HOST }}
+        host: ${{ secrets.REMOTE_HOST }}
         user: ${{ secrets.REMOTE_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
