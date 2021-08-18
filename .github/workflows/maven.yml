@@ -32,13 +32,12 @@ jobs:
         username: ${{ secrets.REMOTE_USER }}
         privateKey : ${{ secrets.SERVER_SSH_KEY }}
     - name: Exec our backend spring boot app
-      uses: fifsky/ssh-action@master
+      uses: appleboy/ssh-action@master
       with:
-        command: |
+        host: ${{ secrets.REMOTE_HOST }}
+        username: ${{ secrets.REMOTE_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
           rm -f insurance.log
           ps -ef | grep insurance | grep -v grep | awk '{print $2}' | xargs kill -9
           nohup java -jar ${{ secrets.REMOTE_TARGET }} --spring.profiles.active=dev > insurance.log 2> /dev/null &
-        host: ${{ secrets.REMOTE_HOST }}
-        user: ${{ secrets.REMOTE_USER }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        args: -tt
