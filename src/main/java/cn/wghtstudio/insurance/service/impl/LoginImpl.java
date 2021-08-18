@@ -48,7 +48,7 @@ public class LoginImpl implements LoginService {
                 withID(user.getId()).
                 withToken(token).
                 withUsername(user.getUsername()).
-                withRole(user.getRole()).
+                withRole(user.getRole().getValue()).
                 build();
     }
 }
