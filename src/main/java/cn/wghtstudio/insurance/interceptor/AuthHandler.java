@@ -92,6 +92,7 @@ public class AuthHandler implements HandlerInterceptor {
                 return false;
             }
 
+            request.getSession().setAttribute("currentUser", user);
             return true;
         } catch (Exception e) {
             parseTokenError(response);
