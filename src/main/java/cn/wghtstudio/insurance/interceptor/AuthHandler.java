@@ -1,5 +1,7 @@
 package cn.wghtstudio.insurance.interceptor;
 
+import cn.wghtstudio.insurance.dao.entity.Route;
+import cn.wghtstudio.insurance.dao.entity.User;
 import cn.wghtstudio.insurance.dao.repository.UserRepository;
 import cn.wghtstudio.insurance.util.Result;
 import cn.wghtstudio.insurance.util.ResultEnum;
@@ -11,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
 public class AuthHandler implements HandlerInterceptor {
     UserRepository userRepository;
@@ -36,7 +39,7 @@ public class AuthHandler implements HandlerInterceptor {
     }
 
     private void parseTokenError(HttpServletResponse response) throws IOException {
-        response.setStatus(403);
+        response.setStatus(401);
         response.setCharacterEncoding("UTF-8");
         response.setContentType("application/json; charset=utf-8");
 
@@ -44,6 +47,21 @@ public class AuthHandler implements HandlerInterceptor {
         ObjectMapper mapper = new ObjectMapper();
         printWriter.append(mapper.writeValueAsString(Result.error(ResultEnum.PARSE_TOKEN_ERROR)));
         printWriter.flush();
+    }
+
+    private void authError(HttpServletResponse response) throws IOException {
+        response.setStatus(403);
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json; charset=utf-8");
+
+        PrintWriter printWriter = response.getWriter();
+        ObjectMapper mapper = new ObjectMapper();
+        printWriter.append(mapper.writeValueAsString(Result.error(ResultEnum.AUTH_ERROR)));
+        printWriter.flush();
+    }
+
+    private boolean judgeUserAuth(Route route, String path, String method) {
+        return path.matches("^" + route.getPath() + "$") && method.equalsIgnoreCase(route.getMethod());
     }
 
     @Override
@@ -54,15 +72,30 @@ public class AuthHandler implements HandlerInterceptor {
             return false;
         }
 
-        int id;
-
         try {
-            id = token.verify(tokenString);
+            final int id = token.verify(tokenString);
+            User user = userRepository.getUserByID(id);
+            final List<Route> routes = user.getRole().getRouteList();
+            final String path = request.getServletPath();
+            final String method = request.getMethod();
+
+            boolean flag = false;
+            for (Route route : routes) {
+                if (judgeUserAuth(route, path, method)) {
+                    flag = true;
+                    break;
+                }
+            }
+
+            if (!flag) {
+                authError(response);
+                return false;
+            }
+
+            return true;
         } catch (Exception e) {
             parseTokenError(response);
             return false;
         }
-
-        return true;
     }
 }
