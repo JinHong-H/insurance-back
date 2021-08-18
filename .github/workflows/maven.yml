@@ -22,4 +22,20 @@ jobs:
         java-version: '11'
         distribution: 'adopt'
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: mvn -B package --file pom.xml -D maven.test.skip=true
+    - name: Copy jar package to server with scp
+      uses: garygrossgarten/github-action-scp@release
+      with:
+        local: target/insurance-0.0.1-SNAPSHOT.jar
+        remote: ${{ secrets.REMOTE_TARGET }}
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.REMOTE_USER }}
+        privateKey : ${{ secrets.SERVER_SSH_KEY }}
+    - name: Exec our backend spring boot app
+      uses: fifsky/ssh-action@master
+      with:
+        command: |
+          java -jar ${{ secrets.REMOTE_TARGET }} --spring.profiles.active=dev &
+        host: ${{ secrets.HOST }}
+        user: ${{ secrets.REMOTE_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
