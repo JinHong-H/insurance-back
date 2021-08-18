@@ -43,7 +43,6 @@ public class LoginController {
         } catch (SignTokenException e) {
             return Result.error(ResultEnum.SIGN_TOKEN_ERROR);
         } catch (Exception e) {
-            e.printStackTrace();
             return Result.error(ResultEnum.DEFAULT_ERROR);
         }
     }
