@@ -11,7 +11,9 @@ public enum ResultEnum {
     ARGUMENT_ERROR(10002, "参数错误"),
     SIGN_TOKEN_ERROR(10003, "生成签名失败"),
     PASSWORD_ERROR(20001, "密码错误"),
-    USER_NOT_FOUND(20002, "用户未找到");
+    USER_NOT_FOUND(20002, "用户未找到"),
+    AUTH_ERROR(20003, "权限不满足"),
+    PARSE_TOKEN_ERROR(20004, "Token 解析失败");
 
     private int code;
     private String msg;

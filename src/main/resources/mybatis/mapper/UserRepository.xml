@@ -14,4 +14,13 @@
         WHERE
         username = #{username}
     </select>
+
+    <select id="getUserByID" resultType="User">
+        SELECT
+        <include refid="baseColumnList"/>
+        FROM
+        users
+        WHERE
+        id=#{id}
+    </select>
 </mapper>
