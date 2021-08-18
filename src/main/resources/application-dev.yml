@@ -4,6 +4,9 @@ spring:
     username: insurance
     password: crRhSzmJms7dnPbE
     driverClassName: com.mysql.cj.jdbc.Driver
+  data:
+    rest:
+      return-body-on-create:
 
 mybatis:
   type-aliases-package: cn.wghtstudio.insurance.dao.entity
@@ -13,3 +16,7 @@ mybatis:
 token:
   expireDate: 10800000
   secret: InsuranceBack
+
+ocr:
+  apiKey: 6v7zqa2sHU1B5fHObGDQiGi3
+  secretKey: 8vi1ZOopPZZUEsDV9BONFex57M5V7B9g
