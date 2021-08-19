@@ -5,9 +5,10 @@ import cn.wghtstudio.insurance.dao.entity.User;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public interface GetOrderInfo {
-    List<Order> getALLOrderList(User user, Date startTime, Date endTime);
+    List<Order> getALLOrderList(User user, Map<String, Object> params);
 
-    Integer getALLOrderListCount(User user, Date startTime, Date endTime);
+    Integer getALLOrderListCount(User user, Map<String, Object> params);
 }

@@ -1,10 +1,10 @@
 package cn.wghtstudio.insurance.service.entity;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-@AllArgsConstructor
+@Builder
 public class GetInsuranceListItem {
     private int id;
     private String owner;

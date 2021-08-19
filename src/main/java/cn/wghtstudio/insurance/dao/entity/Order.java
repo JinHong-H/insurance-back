@@ -16,4 +16,9 @@ public class Order {
 
     private Payment payment;
     private CarType carType;
+
+    private IdCard idCard;
+    private BusinessLicense businessLicense;
+    private DrivingLicense drivingLicense;
+    private Certificate certificate;
 }

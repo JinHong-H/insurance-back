@@ -6,6 +6,7 @@ import cn.wghtstudio.insurance.dao.repository.OrderRepository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class NormalGetOrderInfo implements GetOrderInfo {
     OrderRepository orderRepository;
@@ -15,12 +16,13 @@ public class NormalGetOrderInfo implements GetOrderInfo {
     }
 
     @Override
-    public List<Order> getALLOrderList(User user, Date startTime, Date endTime) {
-        return orderRepository.getOrderByUser(user.getId());
+    public List<Order> getALLOrderList(User user, Map<String, Object> params) {
+        params.put("userId", user.getId());
+        return orderRepository.getOrderByUser(params);
     }
 
     @Override
-    public Integer getALLOrderListCount(User user, Date startTime, Date endTime) {
+    public Integer getALLOrderListCount(User user, Map<String, Object> params) {
         return orderRepository.getOrderCount(user.getId());
     }
 }

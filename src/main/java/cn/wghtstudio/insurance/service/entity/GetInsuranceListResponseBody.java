@@ -12,6 +12,5 @@ public class GetInsuranceListResponseBody {
     private int total;
     private int pageSize;
     private int offset;
-    @Singular
     private List<GetInsuranceListItem> items;
 }

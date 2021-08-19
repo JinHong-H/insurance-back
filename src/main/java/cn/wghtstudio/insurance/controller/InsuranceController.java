@@ -10,9 +10,12 @@ import cn.wghtstudio.insurance.util.ResultEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 public class InsuranceController {
@@ -23,10 +26,19 @@ public class InsuranceController {
 
     @GetMapping(value = "/insurance")
     public Result<GetInsuranceListResponseBody> getInsuranceList(
-            @CurrentUser User user
+            @CurrentUser User user,
+            @RequestParam(defaultValue = "10", value = "pageSize") Integer pageSize,
+            @RequestParam(defaultValue = "0", value = "offset") Integer offset
     ) {
         try {
-            GetInsuranceListResponseBody body = insuranceService.getAllList(user);
+            Map<String, Object> params = new HashMap<>() {
+                {
+                    put("limit", pageSize);
+                    put("offset", offset);
+                }
+            };
+
+            GetInsuranceListResponseBody body = insuranceService.getAllList(user, params);
             return Result.success(body);
         } catch (AuthNotMatchException e) {
             logger.warn("AuthNotMatchException", e);
