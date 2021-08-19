@@ -1,7 +1,6 @@
 package cn.wghtstudio.insurance.controller;
 
 import cn.wghtstudio.insurance.dao.entity.User;
-import cn.wghtstudio.insurance.exception.AuthNotMatchException;
 import cn.wghtstudio.insurance.service.InsuranceService;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListResponseBody;
 import cn.wghtstudio.insurance.util.CurrentUser;

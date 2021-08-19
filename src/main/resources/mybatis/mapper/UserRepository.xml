@@ -6,9 +6,27 @@
         <result property="username" column="username"/>
         <result property="password" column="password"/>
         <result property="roleID" column="role_id"/>
-        <association property="role" column="role_id" select="cn.wghtstudio.insurance.dao.repository.RoleRepository.getRoleByID"
+        <association property="role" column="role_id"
+                     select="cn.wghtstudio.insurance.dao.repository.RoleRepository.getRoleByID"
                      javaType="Role"/>
     </resultMap>
+
+    <insert id="addUser" useGeneratedKeys="true" keyProperty="id">
+        insert into users (username, password, role_id)
+        VALUES (#{username}, #{password}, #{roleId})
+    </insert>
+    <update id="updateUserById">
+        update users
+        set username=#{username},
+            password=#{password},
+            role_id=#{roleId}
+        where id = #{id}
+    </update>
+    <delete id="deleteUserById">
+        delete
+        from users
+        where id = #{id}
+    </delete>
 
     <select id="getUserByUsername" resultMap="userMap">
         SELECT id, username, password, role_id
@@ -20,5 +38,10 @@
         SELECT id, username, password, role_id
         FROM users
         WHERE id = #{id}
+    </select>
+    <select id="queryUser">
+        select id, username, password, role_id
+        from users
+        where username like '%#{question}%'
     </select>
 </mapper>
