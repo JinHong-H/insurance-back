@@ -1,0 +1,37 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.wghtstudio.insurance.dao.repository.OrderRepository">
+    <resultMap id="orderMap" type="Order">
+        <id property="id" column="id"/>
+        <result property="createAt" column="create_at"/>
+        <result property="createBy" column="create_by"/>
+        <result property="startTime" column="start_time"/>
+        <result property="fileType" column="file_type"/>
+        <result property="paymentId" column="payment_id"/>
+        <result property="carTypeId" column="car_type_id"/>
+        <association property="payment" column="payment_id"
+                     select="cn.wghtstudio.insurance.dao.repository.PaymentRepository.getPaymentById"/>
+        <association property="carType" column="column_id"
+                     select="cn.wghtstudio.insurance.dao.repository.CarTypeRepository.getCarTypeById"/>
+    </resultMap>
+
+    <select id="getOrderByUser" resultMap="orderMap">
+        SELECT *
+        FROM orders
+        <where>
+            <if test="userId != null and userId !=0">
+                and create_by = #{userId}
+            </if>
+        </where>
+    </select>
+
+    <select id="getOrderCount" resultType="Integer">
+        SELECT count(*)
+        FROM orders
+        <where>
+            <if test="userId != null and userId !=0">
+                and create_by = #{userId}
+            </if>
+        </where>
+    </select>
+</mapper>
