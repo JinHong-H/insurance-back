@@ -6,8 +6,6 @@ import cn.wghtstudio.insurance.service.OcrInfoService;
 import cn.wghtstudio.insurance.service.entity.*;
 import cn.wghtstudio.insurance.util.Result;
 import cn.wghtstudio.insurance.util.ResultEnum;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,8 +19,6 @@ public class OcrController {
 	@Resource
 	private OcrInfoService ocrInfoService;
 	
-	@Getter
-	@Setter
 	static class OcrRequestBody {
 		@NotEmpty
 		private String imgUrl;
@@ -31,7 +27,7 @@ public class OcrController {
 	@PostMapping("/insurance")
 	public Result<InsuranceDocumentResponseBody> GetInsuranceInfo(@Valid @RequestBody OcrController.OcrRequestBody req) {
 		try {
-			InsuranceDocumentResponseBody res = ocrInfoService.GetInsuranceDocumentService(req.getImgUrl());
+			InsuranceDocumentResponseBody res = ocrInfoService.GetInsuranceDocumentService(req.imgUrl);
 			return Result.success(res);
 		} catch (JsonPraseErrorException e) {
 			return Result.error(ResultEnum.JSON_PARSE_ERROR);
@@ -45,7 +41,7 @@ public class OcrController {
 	@PostMapping("/idcard")
 	public Result<IdCardResponseBody> GetIdCardInfo(@Valid @RequestBody OcrController.OcrRequestBody req) {
 		try {
-			IdCardResponseBody res = ocrInfoService.GetIdCardInfoService(req.getImgUrl());
+			IdCardResponseBody res = ocrInfoService.GetIdCardInfoService(req.imgUrl);
 			return Result.success(res);
 		} catch (JsonPraseErrorException e) {
 			return Result.error(ResultEnum.JSON_PARSE_ERROR);
@@ -59,7 +55,7 @@ public class OcrController {
 	@PostMapping("/bussylicense")
 	public Result<BussyLicenseResponseBdoy> GetBussyLicenseInfo(@Valid @RequestBody OcrController.OcrRequestBody req) {
 		try {
-			BussyLicenseResponseBdoy res = ocrInfoService.GetBussyLicenseInfoService(req.getImgUrl());
+			BussyLicenseResponseBdoy res = ocrInfoService.GetBussyLicenseInfoService(req.imgUrl);
 			return Result.success(res);
 		} catch (JsonPraseErrorException e) {
 			return Result.error(ResultEnum.JSON_PARSE_ERROR);
@@ -73,7 +69,7 @@ public class OcrController {
 	@PostMapping("/drivelicense")
 	public Result<DriveLicenseResponseBody> GetDriveLicenseInfo(@Valid @RequestBody OcrController.OcrRequestBody req) {
 		try {
-			DriveLicenseResponseBody res = ocrInfoService.GetDriveLicenseInfoService(req.getImgUrl());
+			DriveLicenseResponseBody res = ocrInfoService.GetDriveLicenseInfoService(req.imgUrl);
 			return Result.success(res);
 		} catch (JsonPraseErrorException e) {
 			return Result.error(ResultEnum.JSON_PARSE_ERROR);
@@ -87,7 +83,7 @@ public class OcrController {
 	@PostMapping("/certificate")
 	public Result<CertificateResponseBody> GetCertificateInfo(@Valid @RequestBody OcrController.OcrRequestBody req) {
 		try {
-			CertificateResponseBody res = ocrInfoService.GetCertificateInfoService(req.getImgUrl());
+			CertificateResponseBody res = ocrInfoService.GetCertificateInfoService(req.imgUrl);
 			return Result.success(res);
 		} catch (JsonPraseErrorException e) {
 			return Result.error(ResultEnum.JSON_PARSE_ERROR);
