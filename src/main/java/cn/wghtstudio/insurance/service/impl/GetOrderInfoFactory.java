@@ -9,6 +9,6 @@ public class GetOrderInfoFactory {
             return new NormalGetOrderInfo(orderRepository);
         }
 
-        return null;
+        return new RootGetOrderInfo(orderRepository);
     }
 }

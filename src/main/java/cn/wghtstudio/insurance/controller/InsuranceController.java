@@ -40,9 +40,6 @@ public class InsuranceController {
 
             GetInsuranceListResponseBody body = insuranceService.getAllList(user, params);
             return Result.success(body);
-        } catch (AuthNotMatchException e) {
-            logger.warn("AuthNotMatchException", e);
-            return Result.error(ResultEnum.AUTH_ERROR);
         } catch (Exception e) {
             logger.warn("Exception", e);
             return Result.error(ResultEnum.DEFAULT_ERROR);
