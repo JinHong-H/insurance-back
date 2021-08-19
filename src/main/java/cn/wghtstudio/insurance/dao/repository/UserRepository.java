@@ -14,4 +14,5 @@ public interface UserRepository {
     void deleteUserById(int id);
     void updateUserById(int id,String username,String password,int roleId);
     User[] queryUser(String question,int pageSize,int offset);
+    void updateUserPassword(int id,String newpassword);
 }

@@ -47,4 +47,10 @@ public class UserDealImpl implements UserDealService {
 	public void updateUserService(int id, String username, String password, int roleId) {
 		userRepository.updateUserById(id, username, password, roleId);
 	}
+	
+	
+	@Override
+	public void updateOwnPasswordService(int id, String newpassword) {
+		userRepository.updateUserPassword(id, newpassword);
+	}
 }

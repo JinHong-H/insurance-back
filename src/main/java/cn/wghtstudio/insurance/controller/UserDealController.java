@@ -1,10 +1,10 @@
 package cn.wghtstudio.insurance.controller;
 
+import cn.wghtstudio.insurance.dao.entity.User;
 import cn.wghtstudio.insurance.service.UserDealService;
 import cn.wghtstudio.insurance.service.entity.QueryUserResponseBody;
+import cn.wghtstudio.insurance.util.CurrentUser;
 import cn.wghtstudio.insurance.util.Result;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,8 +17,7 @@ public class UserDealController {
 	@Resource
 	UserDealService userDealService;
 	
-	@Getter
-	@Setter
+	
 	static class UserAddRequestBody {
 		@NotEmpty
 		private String username;
@@ -28,21 +27,12 @@ public class UserDealController {
 		private int roleId;
 	}
 	
-	@Getter
-	@Setter
+	
 	static class UserdeleteRequestBody {
 		@NotEmpty
 		private int id;
 	}
 	
-	@Getter
-	@Setter
-	static class QueryRequestBody {
-		private String question;
-	}
-	
-	@Getter
-	@Setter
 	static class UpdateRequestBody {
 		@NotEmpty
 		private int id;
@@ -54,29 +44,40 @@ public class UserDealController {
 		private int roleId;
 	}
 	
+	static class ChangePasswdRequestBody {
+		@NotEmpty
+		private String newpassword;
+	}
+	
 	@PostMapping("/userdeal")
 	public Result<Object> AddUser(@Valid @RequestBody UserAddRequestBody req) {
-		userDealService.addUserService(req.username, req.password, req.getRoleId());
+		userDealService.addUserService(req.username, req.password, req.roleId);
 		return Result.success(null);
 	}
 	
 	@DeleteMapping("/userdeal")
 	public Result<Object> deleteUserUser(@Valid @RequestBody UserdeleteRequestBody req) {
-		userDealService.deleteUserService(req.getId());
+		userDealService.deleteUserService(req.id);
 		return Result.success(null);
 	}
 	
 	
 	@GetMapping("/userdeal")
-	public Result<QueryUserResponseBody[]> QueryUser(@Valid @RequestBody QueryRequestBody req, @RequestParam(defaultValue = "10", value = "pageSize") int pageSize,
+	public Result<QueryUserResponseBody[]> QueryUser(@RequestParam(defaultValue = "", value = "condition") String condition, @RequestParam(defaultValue = "10", value = "pageSize") int pageSize,
 													 @RequestParam(defaultValue = "0", value = "offset") int offset) {
-		QueryUserResponseBody[] res = userDealService.queryUserService(req.question,pageSize,offset);
+		QueryUserResponseBody[] res = userDealService.queryUserService(condition, pageSize, offset);
 		return Result.success(res);
 	}
 	
 	@PutMapping("/userdeal")
 	public Result<Object> UpdateUser(@Valid @RequestBody UpdateRequestBody req) {
-		userDealService.updateUserService(req.getId(), req.username, req.password, req.getRoleId());
+		userDealService.updateUserService(req.id, req.username, req.password, req.roleId);
+		return Result.success(null);
+	}
+	
+	@PostMapping("/changepasswd")
+	public Result<Object> changePassword(@CurrentUser User user, @Valid @RequestBody ChangePasswdRequestBody req) {
+		userDealService.updateOwnPasswordService(user.getId(), req.newpassword);
 		return Result.success(null);
 	}
 }

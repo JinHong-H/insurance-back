@@ -22,6 +22,11 @@
             role_id=#{roleId}
         where id = #{id}
     </update>
+    <update id="updateUserPassword">
+        update users
+        set password=#{newpassword}
+        where id = #{id}
+    </update>
     <delete id="deleteUserById">
         delete
         from users
