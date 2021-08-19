@@ -7,7 +7,6 @@ import cn.wghtstudio.insurance.exception.SignTokenException;
 import cn.wghtstudio.insurance.exception.UserNotFoundException;
 import cn.wghtstudio.insurance.service.entity.LoginResponseBody;
 import cn.wghtstudio.insurance.service.LoginService;
-import cn.wghtstudio.insurance.service.entity.LoginResponseBodyBuilder;
 import cn.wghtstudio.insurance.util.PasswordMD5;
 import cn.wghtstudio.insurance.util.Token;
 import org.springframework.stereotype.Component;
@@ -44,11 +43,11 @@ public class LoginImpl implements LoginService {
             throw new SignTokenException();
         }
 
-        return LoginResponseBodyBuilder.getInstance().
-                withID(user.getId()).
-                withToken(token).
-                withUsername(user.getUsername()).
-                withRole(user.getRole().getValue()).
+        return LoginResponseBody.builder().
+                id(user.getId()).
+                token(token).
+                username(user.getUsername()).
+                role(user.getRole().getValue()).
                 build();
     }
 }

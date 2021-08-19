@@ -1,0 +1,88 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.wghtstudio.insurance.dao.repository.OrderRepository">
+    <resultMap id="orderMap" type="Order">
+        <id property="id" column="oid"/>
+        <result property="createAt" column="create_at"/>
+        <result property="createBy" column="create_by"/>
+        <result property="startTime" column="start_time"/>
+        <result property="fileType" column="file_type"/>
+        <result property="paymentId" column="payment_id"/>
+        <result property="carTypeId" column="car_type_id"/>
+
+        <association property="payment" column="payment_id"
+                     select="cn.wghtstudio.insurance.dao.repository.PaymentRepository.getPaymentById"/>
+        <association property="carType" column="car_type_id"
+                     select="cn.wghtstudio.insurance.dao.repository.CarTypeRepository.getCarTypeById"/>
+
+        <association property="idCard" javaType="IdCard">
+            <id property="id" column="idid"/>
+            <result property="url" column="idurl"/>
+            <result property="name" column="idname"/>
+            <result property="number" column="idnumber"/>
+            <result property="address" column="idaddress"/>
+            <result property="orderId" column="idoid"/>
+        </association>
+
+        <association property="businessLicense" javaType="BusinessLicense">
+            <id property="id" column="blid"/>
+            <result property="url" column="blurl"/>
+            <result property="name" column="blname"/>
+            <result property="number" column="blnumber"/>
+            <result property="address" column="bladdress"/>
+            <result property="orderId" column="bloid"/>
+        </association>
+
+        <association property="drivingLicense" javaType="DrivingLicense">
+            <id property="id" column="dlid"/>
+            <result property="url" column="dlurl"/>
+            <result property="owner" column="dlowner"/>
+            <result property="plateNumber" column="dlpn"/>
+            <result property="engine" column="dlengine"/>
+            <result property="frame" column="dlframe"/>
+            <result property="type" column="dltype"/>
+            <result property="orderId" column="dloid"/>
+        </association>
+
+        <association property="certificate" javaType="Certificate">
+            <id property="id" column="cid"/>
+            <result property="url" column="curl"/>
+            <result property="engine" column="cengine"/>
+            <result property="frame" column="cframe"/>
+            <result property="orderId" column="coid"/>
+        </association>
+    </resultMap>
+
+    <select id="getOrderByUser" resultMap="orderMap">
+        SELECT o.id oid, o.create_at, o.create_by, o.start_time, o.file_type, o.payment_id, o.car_type_id,
+        id.id idid, id.url idurl, id.name idname, id.number idnumber, id.address idaddress, id.order_id idoid,
+        bl.id blid, bl.url blurl, bl.name blname, bl.address bladdress, bl.number blnumber, bl.order_id bloid,
+        c.id cid, c.url curl, c.engine cengine, c.frame cframe, c.order_id coid,
+        dl.id dlid, dl.url dlurl, dl.owner dlowner, dl.plate_number dlpn, dl.engine dlengine, dl.frame dlframe,
+        dl.type dltype, dl.order_id dloid
+        FROM orders o
+        LEFT JOIN id_cards id ON o.id = id.order_id
+        LEFT JOIN business_licenses bl ON o.id = bl.order_id
+        LEFT JOIN certificates c ON o.id = c.order_id
+        LEFT JOIN driving_licenses dl ON o.id = dl.order_id
+        <where>
+            <if test="userId != null and userId !=0">
+                and o.create_by = #{userId}
+            </if>
+        </where>
+        ORDER BY o.create_at DESC
+        <if test="limit != null and offset != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
+
+    <select id="getOrderCount" resultType="Integer">
+        SELECT count(*)
+        FROM orders
+        <where>
+            <if test="userId != null and userId !=0">
+                and create_by = #{userId}
+            </if>
+        </where>
+    </select>
+</mapper>
