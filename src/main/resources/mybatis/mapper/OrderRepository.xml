@@ -66,8 +66,16 @@
         LEFT JOIN certificates c ON o.id = c.order_id
         LEFT JOIN driving_licenses dl ON o.id = dl.order_id
         <where>
-            <if test="userId != null and userId !=0">
+            <if test="userId != null and userId != 0">
                 and o.create_by = #{userId}
+            </if>
+
+            <if test="filterStartTime != null and filterStartTime != ''">
+                and DATE(o.create_at) >= #{filterStartTime}
+            </if>
+
+            <if test="filterEndTime != null and filterEndTime != ''">
+                and DATE(o.create_at) &lt;= #{filterEndTime}
             </if>
         </where>
         ORDER BY o.create_at DESC
@@ -80,8 +88,16 @@
         SELECT count(*)
         FROM orders
         <where>
-            <if test="userId != null and userId !=0">
+            <if test="userId != null and userId != 0">
                 and create_by = #{userId}
+            </if>
+
+            <if test="filterStartTime != null and filterStartTime != ''">
+                and DATE(create_at) >= #{filterStartTime}
+            </if>
+
+            <if test="filterEndTime != null and filterEndTime != ''">
+                and DATE(create_at) &lt;= #{filterEndTime}
             </if>
         </where>
     </select>

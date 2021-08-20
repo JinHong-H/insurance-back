@@ -29,7 +29,7 @@ public class InsuranceServiceImpl implements InsuranceService {
         GetOrderInfo getOrderInfo = GetOrderInfoFactory.getOrderInfo(user.getRole().getValue(), orderRepository);
 
         // 得到对应的订单数目
-        Integer count = getOrderInfo.getALLOrderListCount(user, null);
+        Integer count = getOrderInfo.getALLOrderListCount(user, params);
         if (count != null) {
             builder.total(count);
         }
