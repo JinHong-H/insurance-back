@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +56,20 @@ public class InsuranceController {
     }
 
     @GetMapping(path = "/export")
-    public Result<String> exportExcel(@RequestParam(value = "id", required = false) List<Integer> ids) {
-        return Result.success("/insurance/export");
+    public void exportExcel(
+            HttpServletResponse response,
+            @CurrentUser User user,
+            @RequestParam(value = "id", required = false) List<Integer> ids
+    ) {
+        Map<String, Object> params = new HashMap<>() {
+            {
+                put("ids", ids);
+            }
+        };
+        try {
+            insuranceService.exportExcel(response, user, params);
+        } catch (IOException e) {
+            logger.warn("IOException", e);
+        }
     }
 }
