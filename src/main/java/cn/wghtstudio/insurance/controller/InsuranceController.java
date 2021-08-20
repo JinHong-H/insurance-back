@@ -28,13 +28,14 @@ public class InsuranceController {
     public Result<GetInsuranceListResponseBody> getInsuranceList(
             @CurrentUser User user,
             @RequestParam(defaultValue = "10", value = "pageSize") Integer pageSize,
-            @RequestParam(defaultValue = "0", value = "offset") Integer offset
+            @RequestParam(defaultValue = "0", value = "current") Integer current
     ) {
         try {
             Map<String, Object> params = new HashMap<>() {
                 {
                     put("limit", pageSize);
-                    put("offset", offset);
+                    put("current", current);
+                    put("offset", (current - 1) * pageSize);
                 }
             };
 

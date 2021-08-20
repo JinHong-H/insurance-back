@@ -24,7 +24,7 @@ public class InsuranceServiceImpl implements InsuranceService {
     public GetInsuranceListResponseBody getAllList(User user, Map<String, Object> params) {
         GetInsuranceListResponseBody.GetInsuranceListResponseBodyBuilder builder = GetInsuranceListResponseBody.builder();
         builder.pageSize((Integer) params.get("limit"));
-        builder.offset((Integer) params.get("offset"));
+        builder.current((Integer) params.get("current"));
 
         // 得到对应用户的实体
         GetOrderInfo getOrderInfo = GetOrderInfoFactory.getOrderInfo(user.getRole().getValue(), orderRepository);
