@@ -11,6 +11,6 @@ import java.util.List;
 public class GetInsuranceListResponseBody {
     private int total;
     private int pageSize;
-    private int offset;
+    private int current;
     private List<GetInsuranceListItem> items;
 }
