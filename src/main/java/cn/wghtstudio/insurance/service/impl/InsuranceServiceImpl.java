@@ -3,7 +3,6 @@ package cn.wghtstudio.insurance.service.impl;
 import cn.wghtstudio.insurance.dao.entity.Order;
 import cn.wghtstudio.insurance.dao.entity.User;
 import cn.wghtstudio.insurance.dao.repository.OrderRepository;
-import cn.wghtstudio.insurance.exception.AuthNotMatchException;
 import cn.wghtstudio.insurance.service.InsuranceService;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListItem;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListResponseBody;
@@ -50,15 +49,21 @@ public class InsuranceServiceImpl implements InsuranceService {
 
             if (item.getIdCard() != null) {
                 itemBuilder.owner(item.getIdCard().getName());
-            }
-            if (item.getBusinessLicense() != null) {
+            } else if (item.getBusinessLicense() != null) {
                 itemBuilder.owner(item.getBusinessLicense().getName());
             }
+
             if (item.getDrivingLicense() != null) {
                 itemBuilder.licensePlate(item.getDrivingLicense().getPlateNumber());
-            }
-            if (item.getCertificate() != null) {
-                itemBuilder.licensePlate("新车");
+            } else if (item.getCertificate() != null) {
+                final String engine = item.getCertificate().getEngine();
+                final int engineLength = engine.length();
+                int startPos = engineLength - 6;
+                if (startPos < 0) {
+                    startPos = 0;
+                }
+
+                itemBuilder.licensePlate("新车-" + engine.substring(startPos));
             }
 
             return itemBuilder.build();
