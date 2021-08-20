@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class Location {
-	private int left;
-	private int top;
-	private int width;
-	private int height;
+    private int left;
+    private int top;
+    private int width;
+    private int height;
 }

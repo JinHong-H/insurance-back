@@ -8,6 +8,6 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "ocr")
 public class OcrConfig {
-	private String apiKey;
-	private String secretKey;
+    private String apiKey;
+    private String secretKey;
 }
