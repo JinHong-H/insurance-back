@@ -76,7 +76,7 @@ public class AuthHandler implements HandlerInterceptor {
             final int id = token.verify(tokenString);
             User user = userRepository.getUserByID(id);
             final List<Route> routes = user.getRole().getRouteList();
-            final String path = request.getServletPath();
+            final String path = request.getRequestURI();
             final String method = request.getMethod();
 
             boolean flag = false;

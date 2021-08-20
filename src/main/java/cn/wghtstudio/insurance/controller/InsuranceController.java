@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -53,7 +54,7 @@ public class InsuranceController {
     }
 
     @GetMapping(path = "/export")
-    public Result<String> exportExcel(@RequestParam(required = false) Integer[] ids) {
+    public Result<String> exportExcel(@RequestParam(value = "id", required = false) List<Integer> ids) {
         return Result.success("/insurance/export");
     }
 }
