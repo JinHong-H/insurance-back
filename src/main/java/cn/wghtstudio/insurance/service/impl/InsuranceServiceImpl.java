@@ -1,23 +1,72 @@
 package cn.wghtstudio.insurance.service.impl;
 
-import cn.wghtstudio.insurance.dao.entity.Order;
-import cn.wghtstudio.insurance.dao.entity.User;
+import cn.wghtstudio.insurance.dao.entity.*;
 import cn.wghtstudio.insurance.dao.repository.OrderRepository;
 import cn.wghtstudio.insurance.service.InsuranceService;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListItem;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListResponseBody;
+import cn.wghtstudio.insurance.util.ExcelColumn;
+import cn.wghtstudio.insurance.util.ExcelUtil;
+import lombok.Builder;
+import lombok.Data;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+@Data
+@Builder
+class ExportColumnItem {
+    @ExcelColumn(value = "序号", column = 1)
+    private Integer number;
+
+    @ExcelColumn(value = "车牌号", column = 2)
+    private String licensePlate;
+
+    @ExcelColumn(value = "车架号", column = 3)
+    private String frame;
+
+    @ExcelColumn(value = "发动机号", column = 4)
+    private String engine;
+
+    @ExcelColumn(value = "车主", column = 5)
+    private String owner;
+
+    @ExcelColumn(value = "起保时间", column = 6)
+    private String startTime;
+
+    @ExcelColumn(value = "地址", column = 7)
+    private String address;
+}
 
 @Component
 public class InsuranceServiceImpl implements InsuranceService {
     @Resource
     OrderRepository orderRepository;
+
+    private static String getFormatDate(Date date) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        return simpleDateFormat.format(date);
+    }
+
+    private static String getLicensePlateWhenNew(String engine) {
+        final int engineLength = engine.length();
+        int startPos = engineLength - 6;
+        if (startPos < 0) {
+            startPos = 0;
+        }
+
+        return "新车-" + engine.substring(startPos);
+    }
 
     @Override
     public GetInsuranceListResponseBody getAllList(User user, Map<String, Object> params) {
@@ -29,7 +78,7 @@ public class InsuranceServiceImpl implements InsuranceService {
         GetOrderInfo getOrderInfo = GetOrderInfoFactory.getOrderInfo(user.getRole().getValue(), orderRepository);
 
         // 得到对应的订单数目
-        Integer count = getOrderInfo.getALLOrderListCount(user, null);
+        Integer count = getOrderInfo.getALLOrderListCount(user, params);
         if (count != null) {
             builder.total(count);
         }
@@ -44,8 +93,7 @@ public class InsuranceServiceImpl implements InsuranceService {
             itemBuilder.payType(item.getPayment().getName());
             itemBuilder.carType(item.getCarType().getName());
 
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            itemBuilder.startTime(simpleDateFormat.format(item.getStartTime()));
+            itemBuilder.startTime(InsuranceServiceImpl.getFormatDate(item.getStartTime()));
 
             if (item.getIdCard() != null) {
                 itemBuilder.owner(item.getIdCard().getName());
@@ -56,14 +104,7 @@ public class InsuranceServiceImpl implements InsuranceService {
             if (item.getDrivingLicense() != null) {
                 itemBuilder.licensePlate(item.getDrivingLicense().getPlateNumber());
             } else if (item.getCertificate() != null) {
-                final String engine = item.getCertificate().getEngine();
-                final int engineLength = engine.length();
-                int startPos = engineLength - 6;
-                if (startPos < 0) {
-                    startPos = 0;
-                }
-
-                itemBuilder.licensePlate("新车-" + engine.substring(startPos));
+                itemBuilder.licensePlate(InsuranceServiceImpl.getLicensePlateWhenNew(item.getCertificate().getEngine()));
             }
 
             return itemBuilder.build();
@@ -71,5 +112,57 @@ public class InsuranceServiceImpl implements InsuranceService {
         builder.items(getInsuranceListItems);
 
         return builder.build();
+    }
+
+    @Override
+    public void exportExcel(HttpServletResponse response, User user, Map<String, Object> params) throws IOException {
+        // 得到对应用户的实体
+        GetOrderInfo getOrderInfo = GetOrderInfoFactory.getOrderInfo(user.getRole().getValue(), orderRepository);
+
+        // 得到订单列表
+        List<Order> orderList = getOrderInfo.getALLOrderList(user, params);
+
+        // 处理订单符合返回数据
+        List<ExportColumnItem> exportColumnItems = new ArrayList<>();
+        orderList.forEach((item) -> {
+            ExportColumnItem.ExportColumnItemBuilder builder = ExportColumnItem.builder();
+            builder.number(exportColumnItems.size() + 1).
+                    startTime(InsuranceServiceImpl.getFormatDate(item.getStartTime()));
+
+            if (item.getIdCard() != null) {
+                IdCard idCard = item.getIdCard();
+                builder.owner(idCard.getName()).
+                        address(idCard.getAddress());
+            } else if (item.getBusinessLicense() != null) {
+                BusinessLicense businessLicense = item.getBusinessLicense();
+                builder.owner(businessLicense.getName()).
+                        address(businessLicense.getAddress());
+            }
+
+            if (item.getDrivingLicense() != null) {
+                DrivingLicense drivingLicense = item.getDrivingLicense();
+                builder.licensePlate(drivingLicense.getPlateNumber()).
+                        frame(drivingLicense.getFrame()).
+                        engine(drivingLicense.getEngine());
+            } else if (item.getCertificate() != null) {
+                Certificate certificate = item.getCertificate();
+                builder.licensePlate(InsuranceServiceImpl.getLicensePlateWhenNew(item.getCertificate().getEngine())).
+                        frame(certificate.getFrame()).
+                        engine(certificate.getEngine());
+            }
+
+            exportColumnItems.add(builder.build());
+        });
+
+        Workbook wb = ExcelUtil.export(exportColumnItems, ExportColumnItem.class);
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-disposition", "attachment;filename=export.xlsx");
+        response.flushBuffer();
+
+        OutputStream outputStream = response.getOutputStream();
+        wb.write(outputStream);
+        wb.close();
+        outputStream.flush();
+        outputStream.close();
     }
 }

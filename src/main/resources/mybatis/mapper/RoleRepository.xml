@@ -2,18 +2,18 @@
 
 <mapper namespace="cn.wghtstudio.insurance.dao.repository.RoleRepository">
     <resultMap id="roleMap" type="Role">
-        <id property="id" column="id"/>
+        <id property="id" column="rid"/>
         <result property="name" column="name"/>
         <result property="value" column="value"/>
         <collection property="routeList" ofType="Route" javaType="ArrayList">
-            <id property="id" column="id"/>
+            <id property="id" column="uid"/>
             <result property="path" column="path"/>
             <result property="method" column="method"/>
         </collection>
     </resultMap>
 
     <select id="getRoleByID" resultMap="roleMap">
-        SELECT r.id, r.name, r.value, u.id, u.path, u.method
+        SELECT r.id rid, r.name, r.value, u.id uid, u.path, u.method
         FROM roles r
                  LEFT OUTER JOIN role_route rr on r.id = rr.role_id
                  LEFT OUTER JOIN routes u on rr.route_id = u.id
