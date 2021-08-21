@@ -12,4 +12,5 @@ public class GetInsuranceListItem {
     private String startTime;
     private String carType;
     private String payType;
+    private String policy;
 }
