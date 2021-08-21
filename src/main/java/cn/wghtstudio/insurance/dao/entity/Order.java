@@ -21,4 +21,5 @@ public class Order {
     private BusinessLicense businessLicense;
     private DrivingLicense drivingLicense;
     private Certificate certificate;
+    private Policy policy;
 }

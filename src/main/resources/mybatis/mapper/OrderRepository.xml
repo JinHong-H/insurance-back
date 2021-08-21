@@ -51,6 +51,13 @@
             <result property="frame" column="cframe"/>
             <result property="orderId" column="coid"/>
         </association>
+
+        <association property="policy" javaType="Policy">
+            <id property="id" column="pid"/>
+            <result property="url" column="purl"/>
+            <result property="number" column="pnumber"/>
+            <result property="orderId" column="poid"/>
+        </association>
     </resultMap>
 
     <select id="getOrderByUser" resultMap="orderMap">
@@ -59,12 +66,14 @@
         bl.id blid, bl.url blurl, bl.name blname, bl.address bladdress, bl.number blnumber, bl.order_id bloid,
         c.id cid, c.url curl, c.engine cengine, c.frame cframe, c.order_id coid,
         dl.id dlid, dl.url dlurl, dl.owner dlowner, dl.plate_number dlpn, dl.engine dlengine, dl.frame dlframe,
-        dl.type dltype, dl.order_id dloid
+        dl.type dltype, dl.order_id dloid,
+        p.id pid, p.url purl, p.number pnumber, p.order_id poid
         FROM orders o
         LEFT JOIN id_cards id ON o.id = id.order_id
         LEFT JOIN business_licenses bl ON o.id = bl.order_id
         LEFT JOIN certificates c ON o.id = c.order_id
         LEFT JOIN driving_licenses dl ON o.id = dl.order_id
+        LEFT JOIN policies p on o.id = p.order_id
         <where>
             <if test="userId != null and userId != 0">
                 and o.create_by = #{userId}

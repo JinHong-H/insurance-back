@@ -46,6 +46,9 @@ class ExportColumnItem {
 
     @ExcelColumn(value = "地址", column = 7)
     private String address;
+
+    @ExcelColumn(value = "保单号", column = 8)
+    private String policy;
 }
 
 @Component
@@ -107,6 +110,10 @@ public class InsuranceServiceImpl implements InsuranceService {
                 itemBuilder.licensePlate(InsuranceServiceImpl.getLicensePlateWhenNew(item.getCertificate().getEngine()));
             }
 
+            if (item.getPolicy() != null) {
+                itemBuilder.policy(item.getPolicy().getNumber());
+            }
+
             return itemBuilder.build();
         }).collect(Collectors.toList());
         builder.items(getInsuranceListItems);
@@ -149,6 +156,10 @@ public class InsuranceServiceImpl implements InsuranceService {
                 builder.licensePlate(InsuranceServiceImpl.getLicensePlateWhenNew(item.getCertificate().getEngine())).
                         frame(certificate.getFrame()).
                         engine(certificate.getEngine());
+            }
+
+            if (item.getPolicy() != null) {
+                builder.policy(item.getPolicy().getNumber());
             }
 
             exportColumnItems.add(builder.build());
