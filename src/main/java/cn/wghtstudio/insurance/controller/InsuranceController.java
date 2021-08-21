@@ -59,11 +59,15 @@ public class InsuranceController {
     public void exportExcel(
             HttpServletResponse response,
             @CurrentUser User user,
-            @RequestParam(value = "id", required = false) List<Integer> ids
+            @RequestParam(value = "id", required = false) List<Integer> ids,
+            @RequestParam(value = "startTime", required = false) String filterStartTime,
+            @RequestParam(value = "endTime", required = false) String filterEndTime
     ) {
         Map<String, Object> params = new HashMap<>() {
             {
                 put("ids", ids);
+                put("filterStartTime", filterStartTime);
+                put("filterEndTime", filterEndTime);
             }
         };
         try {

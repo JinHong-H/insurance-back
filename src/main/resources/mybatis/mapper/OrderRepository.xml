@@ -77,6 +77,13 @@
             <if test="filterEndTime != null and filterEndTime != ''">
                 and DATE(o.create_at) &lt;= #{filterEndTime}
             </if>
+
+            <if test="ids != null">
+                and o.id in
+                <foreach collection="ids" item="id" open="(" close=")" separator=",">
+                    #{id}
+                </foreach>
+            </if>
         </where>
         ORDER BY o.create_at DESC
         <if test="limit != null and offset != null">
