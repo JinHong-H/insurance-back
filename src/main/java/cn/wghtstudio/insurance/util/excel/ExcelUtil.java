@@ -1,4 +1,4 @@
-package cn.wghtstudio.insurance.util;
+package cn.wghtstudio.insurance.util.excel;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -62,7 +62,6 @@ public class ExcelUtil {
             AtomicInteger colCount = new AtomicInteger();
             Row row = sheet.createRow(rowCount.getAndIncrement());
             fields.forEach(field -> {
-                Class<?> type = field.getType();
                 Object val = "";
                 try {
                     val = field.get(item);

@@ -13,7 +13,10 @@ public enum ResultEnum {
     PASSWORD_ERROR(20001, "密码错误"),
     USER_NOT_FOUND(20002, "用户未找到"),
     AUTH_ERROR(20003, "权限不满足"),
-    PARSE_TOKEN_ERROR(20004, "Token 解析失败");
+    PARSE_TOKEN_ERROR(20004, "Token 解析失败"),
+    JSON_PARSE_ERROR(20005, "json解析失败"),
+    TOKEN_GET_ERROR(20006, "OCR获取签名失败"),
+    OCR_ERROR(20007, "OCR 失败，请调整图片");
 
     private int code;
     private String msg;

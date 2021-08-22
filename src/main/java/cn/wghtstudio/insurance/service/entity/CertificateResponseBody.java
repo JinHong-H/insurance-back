@@ -1,14 +1,13 @@
-package cn.wghtstudio.insurance.dao.entity;
+package cn.wghtstudio.insurance.service.entity;
 
 import lombok.Builder;
 import lombok.Data;
 
+// 车辆合格证
 @Data
 @Builder
-public class Certificate {
+public class CertificateResponseBody {
     private int id;
-    private String url;
     private String engine;
     private String frame;
-    private int orderId;
 }

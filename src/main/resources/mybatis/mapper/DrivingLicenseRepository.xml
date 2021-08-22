@@ -1,0 +1,9 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.wghtstudio.insurance.dao.repository.DrivingLicenseRepository">
+    <insert id="createDrivingLicense" parameterType="DrivingLicense" useGeneratedKeys="true" keyProperty="id"
+            keyColumn="id">
+        INSERT INTO driving_licenses(url, owner, plate_number, engine, frame, type)
+        values (#{url}, #{owner}, #{plateNumber}, #{engine}, #{frame}, #{type})
+    </insert>
+</mapper>
