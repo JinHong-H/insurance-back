@@ -1,5 +1,6 @@
 package cn.wghtstudio.insurance.controller;
 
+import cn.wghtstudio.insurance.controller.entity.CreateInsuranceRequestBody;
 import cn.wghtstudio.insurance.dao.entity.User;
 import cn.wghtstudio.insurance.service.InsuranceService;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListResponseBody;
@@ -8,10 +9,7 @@ import cn.wghtstudio.insurance.util.Result;
 import cn.wghtstudio.insurance.util.ResultEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
@@ -19,6 +17,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 @RestController
 @RequestMapping(path = "/insurance")
@@ -53,6 +52,18 @@ public class InsuranceController {
             logger.warn("Exception", e);
             return Result.error(ResultEnum.DEFAULT_ERROR);
         }
+    }
+
+    @PostMapping
+    public Result<?> createInsurance(@CurrentUser User user, @RequestBody CreateInsuranceRequestBody req) {
+        if (req.getIdCardId() == null && req.getBusinessLicenseId() == null) {
+            return Result.error(ResultEnum.ARGUMENT_ERROR);
+        }
+        if (req.getDrivingLicenseId() == null && req.getCertificateId() == null) {
+            return Result.error(ResultEnum.ARGUMENT_ERROR);
+        }
+
+        return Result.success(null);
     }
 
     @GetMapping(path = "/export")

@@ -1,5 +1,6 @@
 package cn.wghtstudio.insurance.service.impl;
 
+import cn.wghtstudio.insurance.controller.entity.CreateInsuranceRequestBody;
 import cn.wghtstudio.insurance.dao.entity.*;
 import cn.wghtstudio.insurance.dao.repository.OrderRepository;
 import cn.wghtstudio.insurance.service.InsuranceService;
@@ -11,6 +12,7 @@ import lombok.Builder;
 import lombok.Data;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
@@ -119,6 +121,12 @@ public class InsuranceServiceImpl implements InsuranceService {
         builder.items(getInsuranceListItems);
 
         return builder.build();
+    }
+
+    @Override
+    @Transactional
+    public void createNewOrder(User user, CreateInsuranceRequestBody req) {
+        // 创建 order
     }
 
     @Override
