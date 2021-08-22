@@ -1,18 +1,20 @@
 package cn.wghtstudio.insurance.service.impl;
 
 import cn.wghtstudio.insurance.dao.entity.BusinessLicense;
+import cn.wghtstudio.insurance.dao.entity.Certificate;
+import cn.wghtstudio.insurance.dao.entity.DrivingLicense;
 import cn.wghtstudio.insurance.dao.entity.IdCard;
 import cn.wghtstudio.insurance.dao.repository.BusinessLicenseRepository;
+import cn.wghtstudio.insurance.dao.repository.CertificateRepository;
+import cn.wghtstudio.insurance.dao.repository.DrivingLicenseRepository;
 import cn.wghtstudio.insurance.dao.repository.IdCardRepository;
+import cn.wghtstudio.insurance.exception.OCRException;
 import cn.wghtstudio.insurance.service.OcrInfoService;
 import cn.wghtstudio.insurance.service.entity.BusinessLicenseResponseBody;
 import cn.wghtstudio.insurance.service.entity.CertificateResponseBody;
 import cn.wghtstudio.insurance.service.entity.DrivingLicenseResponseBody;
 import cn.wghtstudio.insurance.service.entity.IdCardResponseBody;
-import cn.wghtstudio.insurance.util.ocr.BusinessResponse;
-import cn.wghtstudio.insurance.util.ocr.GetOcrToken;
-import cn.wghtstudio.insurance.util.ocr.IdCardResponse;
-import cn.wghtstudio.insurance.util.ocr.OcrInfoGetter;
+import cn.wghtstudio.insurance.util.ocr.*;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -32,8 +34,14 @@ public class OcrInfoImpl implements OcrInfoService {
     @Resource
     private BusinessLicenseRepository businessLicenseRepository;
 
+    @Resource
+    private DrivingLicenseRepository drivingLicenseRepository;
+
+    @Resource
+    private CertificateRepository certificateRepository;
+
     @Override
-    public IdCardResponseBody idCardInfoService(String url) throws IOException {
+    public IdCardResponseBody idCardInfoService(String url) throws IOException, OCRException {
         final String token = getOcrToken.getAuthToken();
         final IdCardResponse response = infoGetter.idCard(url, token);
 
@@ -56,7 +64,7 @@ public class OcrInfoImpl implements OcrInfoService {
     }
 
     @Override
-    public BusinessLicenseResponseBody businessInfoService(String url) throws IOException {
+    public BusinessLicenseResponseBody businessInfoService(String url) throws IOException, OCRException {
         final String token = getOcrToken.getAuthToken();
         final BusinessResponse response = infoGetter.businessLicense(url, token);
 
@@ -79,12 +87,49 @@ public class OcrInfoImpl implements OcrInfoService {
     }
 
     @Override
-    public DrivingLicenseResponseBody drivingInfoService(String url) throws IOException {
-        return null;
+    public DrivingLicenseResponseBody drivingInfoService(String url) throws IOException, OCRException {
+        final String token = getOcrToken.getAuthToken();
+        final DrivingLicenseResponse response = infoGetter.vehicleLicense(url, token);
+
+        final DrivingLicenseResponse.WordsResult wordsResult = response.getWordsResult();
+        DrivingLicense drivingLicense = DrivingLicense.builder().
+                url(url).
+                owner(wordsResult.getOwner().getWords()).
+                plateNumber(wordsResult.getPlate().getWords()).
+                engine(wordsResult.getEngine().getWords()).
+                frame(wordsResult.getCarVerify().getWords()).
+                type(wordsResult.getModel().getWords()).
+                build();
+
+        drivingLicenseRepository.createDrivingLicense(drivingLicense);
+
+        return DrivingLicenseResponseBody.builder().
+                id(drivingLicense.getId()).
+                plate(drivingLicense.getPlateNumber()).
+                engine(drivingLicense.getEngine()).
+                frame(drivingLicense.getFrame()).
+                type(drivingLicense.getType()).
+                build();
     }
 
     @Override
-    public CertificateResponseBody certificate(String url) throws IOException {
-        return null;
+    public CertificateResponseBody certificate(String url) throws IOException, OCRException {
+        final String token = getOcrToken.getAuthToken();
+        final CertificateResponse response = infoGetter.vehicleCertificate(url, token);
+
+        final CertificateResponse.WordsResult wordsResult = response.getWordsResult();
+        Certificate certificate = Certificate.builder().
+                url(url).
+                engine(wordsResult.getEngineNo()).
+                frame(wordsResult.getVinNo()).
+                build();
+
+        certificateRepository.createCertificate(certificate);
+
+        return CertificateResponseBody.builder().
+                id(certificate.getId()).
+                engine(certificate.getEngine()).
+                frame(certificate.getFrame()).
+                build();
     }
 }

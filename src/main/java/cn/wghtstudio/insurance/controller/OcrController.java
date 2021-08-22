@@ -1,6 +1,7 @@
 package cn.wghtstudio.insurance.controller;
 
 import cn.wghtstudio.insurance.controller.entity.OcrRequestBody;
+import cn.wghtstudio.insurance.exception.OCRException;
 import cn.wghtstudio.insurance.service.OcrInfoService;
 import cn.wghtstudio.insurance.service.entity.*;
 import cn.wghtstudio.insurance.util.Result;
@@ -24,10 +25,13 @@ public class OcrController {
     private OcrInfoService ocrInfoService;
 
     @PostMapping("/idCard")
-    public Result<IdCardResponseBody> GetInsuranceInfo(@Valid @RequestBody OcrRequestBody req) {
+    public Result<IdCardResponseBody> getInsuranceInfo(@Valid @RequestBody OcrRequestBody req) {
         try {
             IdCardResponseBody res = ocrInfoService.idCardInfoService(req.getImgUrl());
             return Result.success(res);
+        } catch (OCRException e) {
+            logger.warn("OCRException", e);
+            return Result.error(ResultEnum.OCR_ERROR);
         } catch (Exception e) {
             logger.warn("Exception", e);
             return Result.error(ResultEnum.DEFAULT_ERROR);
@@ -35,10 +39,41 @@ public class OcrController {
     }
 
     @PostMapping("/business")
-    public Result<BusinessLicenseResponseBody> GetBusinessInfo(@Valid @RequestBody OcrRequestBody req) {
+    public Result<BusinessLicenseResponseBody> getBusinessInfo(@Valid @RequestBody OcrRequestBody req) {
         try {
             BusinessLicenseResponseBody res = ocrInfoService.businessInfoService(req.getImgUrl());
             return Result.success(res);
+        } catch (OCRException e) {
+            logger.warn("OCRException", e);
+            return Result.error(ResultEnum.OCR_ERROR);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+            return Result.error(ResultEnum.DEFAULT_ERROR);
+        }
+    }
+
+    @PostMapping("/driving")
+    public Result<DrivingLicenseResponseBody> getDrivingInfo(@Valid @RequestBody OcrRequestBody req) {
+        try {
+            DrivingLicenseResponseBody res = ocrInfoService.drivingInfoService(req.getImgUrl());
+            return Result.success(res);
+        } catch (OCRException e) {
+            logger.warn("OCRException", e);
+            return Result.error(ResultEnum.OCR_ERROR);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+            return Result.error(ResultEnum.DEFAULT_ERROR);
+        }
+    }
+
+    @PostMapping("/certificate")
+    public Result<CertificateResponseBody> getCertificateInfo(@Valid @RequestBody OcrRequestBody req) {
+        try {
+            CertificateResponseBody res = ocrInfoService.certificate(req.getImgUrl());
+            return Result.success(res);
+        } catch (OCRException e) {
+            logger.warn("OCRException", e);
+            return Result.error(ResultEnum.OCR_ERROR);
         } catch (Exception e) {
             logger.warn("Exception", e);
             return Result.error(ResultEnum.DEFAULT_ERROR);

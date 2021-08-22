@@ -1,6 +1,6 @@
 package cn.wghtstudio.insurance.util.ocr;
 
-import cn.wghtstudio.insurance.util.HttpUtil;
+import cn.wghtstudio.insurance.exception.OCRException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.springframework.stereotype.Component;
@@ -41,47 +41,63 @@ public class OcrInfoGetter {
         return Objects.requireNonNull(response.body()).string();
     }
 
-    public IdCardResponse idCard(String imgUrl, String token) throws IOException {
+    public IdCardResponse idCard(String imgUrl, String token) throws IOException, OCRException {
         // 请求url
         final HttpUrl url = getUrl("https://aip.baidubce.com/rest/2.0/ocr/v1/idcard", token);
         RequestBody requestBody = getRequestBody(Map.of("url", imgUrl, "id_card_side", "front"));
 
         String response = execRequest(url, requestBody);
         ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readValue(response, IdCardResponse.class);
+        IdCardResponse res = objectMapper.readValue(response, IdCardResponse.class);
+        if (res.getErrorCode() != null) {
+            throw new OCRException();
+        }
+
+        return res;
     }
 
-    public BusinessResponse businessLicense(String imgUrl, String token) throws IOException {
+    public BusinessResponse businessLicense(String imgUrl, String token) throws IOException, OCRException {
         // 请求url
         final HttpUrl url = getUrl("https://aip.baidubce.com/rest/2.0/ocr/v1/business_license", token);
         RequestBody requestBody = getRequestBody(Map.of("url", imgUrl));
 
         String response = execRequest(url, requestBody);
         ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readValue(response, BusinessResponse.class);
+        BusinessResponse res = objectMapper.readValue(response, BusinessResponse.class);
+        if (res.getErrorCode() != null) {
+            throw new OCRException();
+        }
+
+        return res;
     }
 
-    public String vehicleLicense(String imgUrl, String token) {
+    public DrivingLicenseResponse vehicleLicense(String imgUrl, String token) throws IOException, OCRException {
         // 请求url
-        String url = "https://aip.baidubce.com/rest/2.0/ocr/v1/vehicle_license";
-        try {
-            String param = "url=" + imgUrl;
-            return HttpUtil.post(url, token, param);
-        } catch (Exception e) {
-            e.printStackTrace();
+        final HttpUrl url = getUrl("https://aip.baidubce.com/rest/2.0/ocr/v1/vehicle_license", token);
+        RequestBody requestBody = getRequestBody(Map.of("url", imgUrl));
+
+        String response = execRequest(url, requestBody);
+        ObjectMapper objectMapper = new ObjectMapper();
+        DrivingLicenseResponse res = objectMapper.readValue(response, DrivingLicenseResponse.class);
+        if (res.getErrorCode() != null) {
+            throw new OCRException();
         }
-        return null;
+
+        return res;
     }
 
-    public String vehicleCertificate(String imgUrl, String token) {
+    public CertificateResponse vehicleCertificate(String imgUrl, String token) throws IOException, OCRException {
         // 请求url
-        String url = "https://aip.baidubce.com/rest/2.0/ocr/v1/vehicle_certificate";
-        try {
-            String param = "url=" + imgUrl;
-            return HttpUtil.post(url, token, param);
-        } catch (Exception e) {
-            e.printStackTrace();
+        final HttpUrl url = getUrl("https://aip.baidubce.com/rest/2.0/ocr/v1/vehicle_certificate", token);
+        RequestBody requestBody = getRequestBody(Map.of("url", imgUrl));
+
+        String response = execRequest(url, requestBody);
+        ObjectMapper objectMapper = new ObjectMapper();
+        CertificateResponse res = objectMapper.readValue(response, CertificateResponse.class);
+        if (res.getErrorCode() != null) {
+            throw new OCRException();
         }
-        return null;
+
+        return res;
     }
 }

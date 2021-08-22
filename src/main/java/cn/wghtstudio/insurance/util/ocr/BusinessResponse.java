@@ -42,4 +42,6 @@ public class BusinessResponse {
     private WordsResult wordsResult;
     @JsonProperty("words_result_num")
     private int wordsResultNum;
+    @JsonProperty("error_code")
+    private Integer errorCode;
 }
