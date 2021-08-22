@@ -5,7 +5,7 @@ import lombok.Data;
 
 // 行驶证
 @Data
-public class DriveLicenseResponseBody {
+public class DrivingLicenseResponseBody {
     private Words_result words_result;
     private String log_id;
     private int words_result_num;

@@ -8,12 +8,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class IdCardResponse {
     @Data
-    public static class Info {
-        private Location location;
-        private String words;
-    }
-
-    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class WordsResult {
         @JsonProperty("住址")
         private Info address;

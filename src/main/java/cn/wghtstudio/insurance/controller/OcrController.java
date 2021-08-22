@@ -35,7 +35,13 @@ public class OcrController {
     }
 
     @PostMapping("/business")
-    public Result<?> GetBusinessInfo(@Valid @RequestBody OcrRequestBody req) {
-        return Result.success(null);
+    public Result<BusinessLicenseResponseBody> GetBusinessInfo(@Valid @RequestBody OcrRequestBody req) {
+        try {
+            BusinessLicenseResponseBody res = ocrInfoService.businessInfoService(req.getImgUrl());
+            return Result.success(res);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+            return Result.error(ResultEnum.DEFAULT_ERROR);
+        }
     }
 }

@@ -1,9 +1,15 @@
 package cn.wghtstudio.insurance.service.impl;
 
+import cn.wghtstudio.insurance.dao.entity.BusinessLicense;
 import cn.wghtstudio.insurance.dao.entity.IdCard;
+import cn.wghtstudio.insurance.dao.repository.BusinessLicenseRepository;
 import cn.wghtstudio.insurance.dao.repository.IdCardRepository;
 import cn.wghtstudio.insurance.service.OcrInfoService;
+import cn.wghtstudio.insurance.service.entity.BusinessLicenseResponseBody;
+import cn.wghtstudio.insurance.service.entity.CertificateResponseBody;
+import cn.wghtstudio.insurance.service.entity.DrivingLicenseResponseBody;
 import cn.wghtstudio.insurance.service.entity.IdCardResponseBody;
+import cn.wghtstudio.insurance.util.ocr.BusinessResponse;
 import cn.wghtstudio.insurance.util.ocr.GetOcrToken;
 import cn.wghtstudio.insurance.util.ocr.IdCardResponse;
 import cn.wghtstudio.insurance.util.ocr.OcrInfoGetter;
@@ -23,10 +29,12 @@ public class OcrInfoImpl implements OcrInfoService {
     @Resource
     private IdCardRepository idCardRepository;
 
+    @Resource
+    private BusinessLicenseRepository businessLicenseRepository;
+
     @Override
     public IdCardResponseBody idCardInfoService(String url) throws IOException {
         final String token = getOcrToken.getAuthToken();
-
         final IdCardResponse response = infoGetter.idCard(url, token);
 
         final IdCardResponse.WordsResult wordsResult = response.getWordsResult();
@@ -46,103 +54,37 @@ public class OcrInfoImpl implements OcrInfoService {
                 number(idCard.getNumber()).
                 build();
     }
-//    @Resource
-//    private OcrInfoGet ocrInfoGet;
-//
-//    @Resource
-//    private OcrTokenGet ocrTokenGet;
-//
-//    @Override
-//    public InsuranceDocumentResponseBody GetInsuranceDocumentService(String imgUrl) throws OcrTokenGetErrorException, JsonParseErrorException {
-//        String token = ocrTokenGet.getAuth();
-//        if (token == null || token.length() == 0) {
-//            throw new OcrTokenGetErrorException();
-//        }
-//        try {
-//            String result = ocrInfoGet.insuranceDocuments(imgUrl, token);
-//            if (result == null) {
-//                return null;
-//            }
-//            ObjectMapper mapper = new ObjectMapper();
-//            return mapper.readValue(result, InsuranceDocumentResponseBody.class);
-//        } catch (JsonProcessingException e) {
-//            e.printStackTrace();
-//            throw new JsonParseErrorException();
-//        }
-//    }
-//
-//    @Override
-//    public IdCardResponseBody GetIdCardInfoService(String imgUrl) throws OcrTokenGetErrorException, JsonParseErrorException {
-//        String token = ocrTokenGet.getAuth();
-//        if (token == null || token.length() == 0) {
-//            throw new OcrTokenGetErrorException();
-//        }
-//        try {
-//            String result = ocrInfoGet.idcard(imgUrl, token);
-//            if (result == null) {
-//                return null;
-//            }
-//            ObjectMapper mapper = new ObjectMapper();
-//            return mapper.readValue(result, IdCardResponseBody.class);
-//        } catch (JsonProcessingException e) {
-//            e.printStackTrace();
-//            throw new JsonParseErrorException();
-//        }
-//    }
-//
-//    @Override
-//    public BussyLicenseResponseBdoy GetBussyLicenseInfoService(String imgUrl) throws OcrTokenGetErrorException, JsonParseErrorException {
-//        String token = ocrTokenGet.getAuth();
-//        if (token == null || token.length() == 0) {
-//            throw new OcrTokenGetErrorException();
-//        }
-//        try {
-//            String result = ocrInfoGet.businessLicense(imgUrl, token);
-//            if (result == null) {
-//                return null;
-//            }
-//            ObjectMapper mapper = new ObjectMapper();
-//            return mapper.readValue(result, BussyLicenseResponseBdoy.class);
-//        } catch (JsonProcessingException e) {
-//            e.printStackTrace();
-//            throw new JsonParseErrorException();
-//        }
-//    }
-//
-//    public DriveLicenseResponseBody GetDriveLicenseInfoService(String imgUrl) throws OcrTokenGetErrorException, JsonParseErrorException {
-//        String token = ocrTokenGet.getAuth();
-//        if (token == null || token.length() == 0) {
-//            throw new OcrTokenGetErrorException();
-//        }
-//        try {
-//            String result = ocrInfoGet.vehicleLicense(imgUrl, token);
-//            if (result == null) {
-//                return null;
-//            }
-//            ObjectMapper mapper = new ObjectMapper();
-//            return mapper.readValue(result, DriveLicenseResponseBody.class);
-//        } catch (JsonProcessingException e) {
-//            e.printStackTrace();
-//            throw new JsonParseErrorException();
-//        }
-//    }
-//
-//    public CertificateResponseBody GetCertificateInfoService(String imgUrl) throws OcrTokenGetErrorException, JsonParseErrorException {
-//        String token = ocrTokenGet.getAuth();
-//        if (token == null || token.length() == 0) {
-//            throw new OcrTokenGetErrorException();
-//        }
-//        try {
-//            String result = ocrInfoGet.vehicleCertificate(imgUrl, token);
-//            if (result == null) {
-//                return null;
-//            }
-//            ObjectMapper mapper = new ObjectMapper();
-//            return mapper.readValue(result, CertificateResponseBody.class);
-//        } catch (JsonProcessingException e) {
-//            e.printStackTrace();
-//            throw new JsonParseErrorException();
-//        }
-//    }
 
+    @Override
+    public BusinessLicenseResponseBody businessInfoService(String url) throws IOException {
+        final String token = getOcrToken.getAuthToken();
+        final BusinessResponse response = infoGetter.businessLicense(url, token);
+
+        final BusinessResponse.WordsResult wordsResult = response.getWordsResult();
+        BusinessLicense businessLicense = BusinessLicense.builder().
+                url(url).
+                name(wordsResult.getCompanyName().getWords()).
+                address(wordsResult.getAddress().getWords()).
+                number(wordsResult.getCreditCode().getWords()).
+                build();
+
+        businessLicenseRepository.createBusinessLicense(businessLicense);
+
+        return BusinessLicenseResponseBody.builder().
+                id(businessLicense.getId()).
+                name(businessLicense.getName()).
+                address(businessLicense.getAddress()).
+                number(businessLicense.getNumber()).
+                build();
+    }
+
+    @Override
+    public DrivingLicenseResponseBody drivingInfoService(String url) throws IOException {
+        return null;
+    }
+
+    @Override
+    public CertificateResponseBody certificate(String url) throws IOException {
+        return null;
+    }
 }
