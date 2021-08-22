@@ -2,7 +2,6 @@ package cn.wghtstudio.insurance.service.impl;
 
 import cn.wghtstudio.insurance.dao.entity.IdCard;
 import cn.wghtstudio.insurance.dao.repository.IdCardRepository;
-import cn.wghtstudio.insurance.exception.GetOcrTokenErrorException;
 import cn.wghtstudio.insurance.service.OcrInfoService;
 import cn.wghtstudio.insurance.service.entity.IdCardResponseBody;
 import cn.wghtstudio.insurance.util.ocr.GetOcrToken;
@@ -25,7 +24,7 @@ public class OcrInfoImpl implements OcrInfoService {
     private IdCardRepository idCardRepository;
 
     @Override
-    public IdCardResponseBody idCardInfoService(String url) throws GetOcrTokenErrorException, IOException {
+    public IdCardResponseBody idCardInfoService(String url) throws IOException {
         final String token = getOcrToken.getAuthToken();
 
         final IdCardResponse response = infoGetter.idCard(url, token);
