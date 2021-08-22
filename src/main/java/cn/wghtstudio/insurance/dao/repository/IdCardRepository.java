@@ -5,5 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
 public interface IdCardRepository {
-    Integer createIdCard(IdCard idCard);
+    void createIdCard(IdCard idCard);
+
+    void updateIdCard(IdCard idCard);
 }

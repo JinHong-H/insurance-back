@@ -3,9 +3,46 @@ package cn.wghtstudio.insurance.controller.entity;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
+import java.util.List;
 
 @Data
 public class CreateInsuranceRequestBody {
+    @Data
+    public static class IdCardRequestBody {
+        @NotEmpty
+        private Integer id;
+        private String name;
+        private String number;
+        private String address;
+    }
+
+    @Data
+    public static class BusinessLicenseRequestBody {
+        @NotEmpty
+        private Integer id;
+        private String name;
+        private String number;
+        private String address;
+    }
+
+    @Data
+    public static class DrivingLicenseRequestBody {
+        @NotEmpty
+        private int id;
+        private String plate;
+        private String engine;
+        private String frame;
+        private String type;
+    }
+
+    @Data
+    public static class CertificateRequestBody {
+        @NotEmpty
+        private Integer id;
+        private String engine;
+        private String frame;
+    }
+
     @NotEmpty
     private String startTime;
 
@@ -15,14 +52,14 @@ public class CreateInsuranceRequestBody {
     @NotEmpty
     private int carTypeId;
 
-    private Integer idCardId;
+    private IdCardRequestBody idCard;
 
-    private Integer businessLicenseId;
+    private BusinessLicenseRequestBody businessLicense;
 
-    private Integer drivingLicenseId;
+    private DrivingLicenseRequestBody drivingLicense;
 
-    private Integer certificateId;
+    private CertificateRequestBody certificate;
 
-    private Integer otherFileId;
+    private List<Integer> otherFileId;
 }
 

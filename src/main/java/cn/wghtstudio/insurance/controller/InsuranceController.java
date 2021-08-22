@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,14 +57,23 @@ public class InsuranceController {
 
     @PostMapping
     public Result<?> createInsurance(@CurrentUser User user, @RequestBody CreateInsuranceRequestBody req) {
-        if (req.getIdCardId() == null && req.getBusinessLicenseId() == null) {
+        if (req.getIdCard() == null && req.getBusinessLicense() == null) {
             return Result.error(ResultEnum.ARGUMENT_ERROR);
         }
-        if (req.getDrivingLicenseId() == null && req.getCertificateId() == null) {
+        if (req.getDrivingLicense() == null && req.getCertificate() == null) {
             return Result.error(ResultEnum.ARGUMENT_ERROR);
         }
 
-        return Result.success(null);
+        try {
+            insuranceService.createNewOrder(user, req);
+            return Result.success(null);
+        } catch (ParseException e) {
+            logger.warn("ParseException", e);
+            return Result.error(ResultEnum.ARGUMENT_ERROR);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+            return Result.error(ResultEnum.DEFAULT_ERROR);
+        }
     }
 
     @GetMapping(path = "/export")

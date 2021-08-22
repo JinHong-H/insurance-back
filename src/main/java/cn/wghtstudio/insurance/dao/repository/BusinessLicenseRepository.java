@@ -5,5 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
 public interface BusinessLicenseRepository {
-    Integer createBusinessLicense(BusinessLicense businessLicense);
+    void createBusinessLicense(BusinessLicense businessLicense);
+
+    void updateBusinessLicense(BusinessLicense businessLicense);
 }

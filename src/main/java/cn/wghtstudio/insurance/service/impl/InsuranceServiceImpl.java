@@ -2,7 +2,7 @@ package cn.wghtstudio.insurance.service.impl;
 
 import cn.wghtstudio.insurance.controller.entity.CreateInsuranceRequestBody;
 import cn.wghtstudio.insurance.dao.entity.*;
-import cn.wghtstudio.insurance.dao.repository.OrderRepository;
+import cn.wghtstudio.insurance.dao.repository.*;
 import cn.wghtstudio.insurance.service.InsuranceService;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListItem;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListResponseBody;
@@ -18,6 +18,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -57,6 +58,18 @@ class ExportColumnItem {
 public class InsuranceServiceImpl implements InsuranceService {
     @Resource
     OrderRepository orderRepository;
+
+    @Resource
+    IdCardRepository idCardRepository;
+
+    @Resource
+    BusinessLicenseRepository businessLicenseRepository;
+
+    @Resource
+    DrivingLicenseRepository drivingLicenseRepository;
+
+    @Resource
+    CertificateRepository certificateRepository;
 
     private static String getFormatDate(Date date) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -125,8 +138,67 @@ public class InsuranceServiceImpl implements InsuranceService {
 
     @Override
     @Transactional
-    public void createNewOrder(User user, CreateInsuranceRequestBody req) {
+    public void createNewOrder(User user, CreateInsuranceRequestBody req) throws ParseException {
         // 创建 order
+        Order.OrderBuilder builder = Order.builder();
+        Order order = builder.
+                createBy(user.getId()).
+                startTime(new SimpleDateFormat("yyyy-MM-dd").parse(req.getStartTime())).
+                paymentId(req.getPaymentId()).
+                carTypeId(req.getCarTypeId()).
+                build();
+        orderRepository.createOrder(order);
+
+        int orderId = order.getId();
+
+        // 开始更新证明材料手动修正字段与外键关联
+        if (req.getIdCard() != null) {
+            CreateInsuranceRequestBody.IdCardRequestBody body = req.getIdCard();
+            IdCard idCard = IdCard.builder().
+                    id(body.getId()).
+                    name(body.getName()).
+                    address(body.getAddress()).
+                    number(body.getNumber()).
+                    orderId(orderId).
+                    build();
+            idCardRepository.updateIdCard(idCard);
+        } else if (req.getBusinessLicense() != null) {
+            CreateInsuranceRequestBody.BusinessLicenseRequestBody body = req.getBusinessLicense();
+            BusinessLicense businessLicense = BusinessLicense.builder().
+                    id(body.getId()).
+                    name(body.getName()).
+                    address(body.getAddress()).
+                    number(body.getNumber()).
+                    orderId(orderId).
+                    build();
+            businessLicenseRepository.updateBusinessLicense(businessLicense);
+        }
+
+        if (req.getDrivingLicense() != null) {
+            CreateInsuranceRequestBody.DrivingLicenseRequestBody body = req.getDrivingLicense();
+            DrivingLicense drivingLicense = DrivingLicense.builder().
+                    id(body.getId()).
+                    plateNumber(body.getPlate()).
+                    engine(body.getEngine()).
+                    frame(body.getFrame()).
+                    type(body.getType()).
+                    orderId(orderId).
+                    build();
+            drivingLicenseRepository.updateDrivingLicense(drivingLicense);
+        } else if (req.getCertificate() != null) {
+            CreateInsuranceRequestBody.CertificateRequestBody body = req.getCertificate();
+            Certificate certificate = Certificate.builder().
+                    id(body.getId()).
+                    engine(body.getEngine()).
+                    frame(body.getFrame()).
+                    orderId(orderId).
+                    build();
+            certificateRepository.updateCertificate(certificate);
+        }
+
+//        if (req.getOtherFileId() != null) {
+//
+//        }
     }
 
     @Override
