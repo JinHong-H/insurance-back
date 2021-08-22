@@ -58,7 +58,6 @@ public class OcrInfoGetter {
 
         String response = execRequest(url, requestBody);
         ObjectMapper objectMapper = new ObjectMapper();
-        System.out.println(response);
         return objectMapper.readValue(response, BusinessResponse.class);
     }
 
