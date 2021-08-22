@@ -6,7 +6,6 @@ import lombok.Data;
 // 营业执照
 @Data
 public class BussyLicenseResponseBdoy {
-
     private String log_id;
     private Words_result words_result;
     private int words_result_num;
@@ -40,6 +39,4 @@ public class BussyLicenseResponseBdoy {
             private Location location;
         }
     }
-
-
 }
