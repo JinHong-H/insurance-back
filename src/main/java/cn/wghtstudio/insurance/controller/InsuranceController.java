@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,11 +58,26 @@ public class InsuranceController {
     }
 
     @PostMapping
-    public Result<?> createInsurance(@CurrentUser User user, @RequestBody CreateInsuranceRequestBody req) {
+    public Result<?> createInsurance(@CurrentUser User user, @Valid @RequestBody CreateInsuranceRequestBody req) {
+        // 证明材料必须存在其中一项
         if (req.getIdCard() == null && req.getBusinessLicense() == null) {
             return Result.error(ResultEnum.ARGUMENT_ERROR);
         }
         if (req.getDrivingLicense() == null && req.getCertificate() == null) {
+            return Result.error(ResultEnum.ARGUMENT_ERROR);
+        }
+
+        // 必须传递 ID 字段
+        if (req.getIdCard() != null && req.getIdCard().getId() == null) {
+            return Result.error(ResultEnum.ARGUMENT_ERROR);
+        }
+        if (req.getBusinessLicense() != null && req.getBusinessLicense().getId() == null) {
+            return Result.error(ResultEnum.ARGUMENT_ERROR);
+        }
+        if (req.getDrivingLicense() != null && req.getDrivingLicense().getId() == null) {
+            return Result.error(ResultEnum.ARGUMENT_ERROR);
+        }
+        if (req.getCertificate() != null && req.getCertificate().getId() == null) {
             return Result.error(ResultEnum.ARGUMENT_ERROR);
         }
 
