@@ -6,4 +6,32 @@
         INSERT INTO driving_licenses(url, owner, plate_number, engine, frame, type)
         values (#{url}, #{owner}, #{plateNumber}, #{engine}, #{frame}, #{type})
     </insert>
+
+    <update id="updateDrivingLicense" parameterType="DrivingLicense">
+        UPDATE driving_licenses
+        <set>
+            <if test="url != null">
+                url = #{url},
+            </if>
+            <if test="owner != null">
+                owner = #{owner},
+            </if>
+            <if test="plateNumber != null">
+                plate_number = #{plateNumber},
+            </if>
+            <if test="engine != null">
+                engine = #{engine},
+            </if>
+            <if test="frame != null">
+                frame = #{frame},
+            </if>
+            <if test="type != null">
+                type = #{type},
+            </if>
+            <if test="orderId != null">
+                order_id = #{orderId},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
 </mapper>

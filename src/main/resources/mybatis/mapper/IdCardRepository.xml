@@ -5,4 +5,26 @@
         INSERT INTO id_cards(url, name, number, address)
         values (#{url}, #{name}, #{number}, #{address})
     </insert>
+
+    <update id="updateIdCard" parameterType="IdCard">
+        UPDATE id_cards
+        <set>
+            <if test="url != null">
+                url = #{url},
+            </if>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="number != null">
+                number = #{number},
+            </if>
+            <if test="address != null">
+                address = #{address},
+            </if>
+            <if test="orderId != null">
+                order_id = #{orderId},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
 </mapper>

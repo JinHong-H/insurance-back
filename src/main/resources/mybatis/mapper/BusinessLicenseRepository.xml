@@ -6,4 +6,26 @@
         INSERT INTO business_licenses(url, name, number, address)
         values (#{url}, #{name}, #{number}, #{address})
     </insert>
+
+    <update id="updateBusinessLicense" parameterType="BusinessLicense">
+        UPDATE business_licenses
+        <set>
+            <if test="url != null">
+                url = #{url},
+            </if>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="number != null">
+                number = #{number},
+            </if>
+            <if test="address != null">
+                address = #{address},
+            </if>
+            <if test="orderId != null">
+                order_id = #{orderId},
+            </if>
+        </set>
+        WHERE id=#{id}
+    </update>
 </mapper>

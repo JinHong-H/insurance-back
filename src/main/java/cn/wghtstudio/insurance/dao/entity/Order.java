@@ -1,10 +1,12 @@
 package cn.wghtstudio.insurance.dao.entity;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.Date;
 
 @Data
+@Builder
 public class Order {
     private int id;
     private Date createAt;

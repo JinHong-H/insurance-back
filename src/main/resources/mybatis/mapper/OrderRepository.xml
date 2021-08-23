@@ -117,4 +117,9 @@
             </if>
         </where>
     </select>
+
+    <insert id="createOrder" useGeneratedKeys="true" keyColumn="id" keyProperty="id" parameterType="Order">
+        insert into orders(create_at, create_by, start_time, file_type, payment_id, car_type_id)
+        values (now(), #{createBy}, #{startTime}, 0, #{paymentId}, #{carTypeId})
+    </insert>
 </mapper>

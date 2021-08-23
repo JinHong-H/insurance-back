@@ -6,10 +6,10 @@ import lombok.Data;
 @Data
 @Builder
 public class BusinessLicense {
-    private int id;
+    private Integer id;
     private String url;
     private String name;
     private String address;
     private String number;
-    private int orderId;
+    private Integer orderId;
 }

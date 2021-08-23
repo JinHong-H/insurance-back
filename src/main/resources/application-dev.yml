@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://47.99.116.208:3306/insurance
+    url: jdbc:mysql://47.99.116.208:3306/insurance?serverTimezone=Asia/Shanghai
     username: insurance
     password: crRhSzmJms7dnPbE
     driverClassName: com.mysql.cj.jdbc.Driver

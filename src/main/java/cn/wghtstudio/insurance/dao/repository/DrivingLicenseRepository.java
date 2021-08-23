@@ -5,5 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
 public interface DrivingLicenseRepository {
-    Integer createDrivingLicense(DrivingLicense drivingLicense);
+    void createDrivingLicense(DrivingLicense drivingLicense);
+
+    void updateDrivingLicense(DrivingLicense drivingLicense);
 }
