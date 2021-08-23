@@ -7,29 +7,29 @@
         values (#{url}, #{owner}, #{plateNumber}, #{engine}, #{frame}, #{type})
     </insert>
 
-    <update id="updateDrivingLicense">
+    <update id="updateDrivingLicense" parameterType="DrivingLicense">
         UPDATE driving_licenses
         <set>
             <if test="url != null">
-                url=#{url},
+                url = #{url},
             </if>
             <if test="owner != null">
-                owner=#{owner},
+                owner = #{owner},
             </if>
-            <if test="palteNumber != null">
-                plate_number=#{plateNumber},
+            <if test="plateNumber != null">
+                plate_number = #{plateNumber},
             </if>
             <if test="engine != null">
-                engine=#{engine},
+                engine = #{engine},
             </if>
             <if test="frame != null">
-                frame=#{frame},
+                frame = #{frame},
             </if>
             <if test="type != null">
-                type=#{type},
+                type = #{type},
             </if>
             <if test="orderId != null">
-                order_id=#{orderId},
+                order_id = #{orderId},
             </if>
         </set>
         WHERE id = #{id}

@@ -7,23 +7,23 @@
         values (#{url}, #{name}, #{number}, #{address})
     </insert>
 
-    <update id="updateBusinessLicense">
+    <update id="updateBusinessLicense" parameterType="BusinessLicense">
         UPDATE business_licenses
         <set>
             <if test="url != null">
-                url=#{url},
+                url = #{url},
             </if>
             <if test="name != null">
-                name=#{name},
+                name = #{name},
             </if>
             <if test="number != null">
-                number=#{number},
+                number = #{number},
             </if>
             <if test="address != null">
-                address=#{address},
+                address = #{address},
             </if>
             <if test="orderId != null">
-                order_id=#{orderId},
+                order_id = #{orderId},
             </if>
         </set>
         WHERE id=#{id}

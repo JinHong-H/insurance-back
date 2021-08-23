@@ -7,20 +7,20 @@
         values (#{url}, #{engine}, #{frame})
     </insert>
 
-    <update id="updateCertificate">
+    <update id="updateCertificate" parameterType="Certificate">
         UPDATE certificates
         <set>
             <if test="url != null">
-                url=#{url},
+                url = #{url},
             </if>
             <if test="engine != null">
-                engine=#{engine},
+                engine = #{engine},
             </if>
             <if test="frame != null">
-                frame=#{frame},
+                frame = #{frame},
             </if>
             <if test="orderId != null">
-                order_id=#{orderId},
+                order_id = #{orderId},
             </if>
         </set>
         WHERE id=#{id}
