@@ -62,8 +62,6 @@ public class AuthHandler implements HandlerInterceptor {
     }
 
     private boolean judgeUserAuth(Route route, String path, String method) {
-        System.out.println(route.getPath());
-        System.out.println(path);
         return path.matches("^" + route.getPath() + "$") && method.equalsIgnoreCase(route.getMethod());
     }
 
