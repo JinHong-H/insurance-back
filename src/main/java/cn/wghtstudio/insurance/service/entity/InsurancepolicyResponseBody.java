@@ -7,5 +7,5 @@ import lombok.Data;
 @Builder
 public class InsurancepolicyResponseBody {
     private String plateNumber;
-    private String insuranceId;
+    private String number;
 }

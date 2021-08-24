@@ -20,10 +20,10 @@ import javax.validation.Valid;
 @RequestMapping("/ocr")
 public class OcrController {
     private final Logger logger = LoggerFactory.getLogger(OcrController.class);
-
+    
     @Resource
     private OcrInfoService ocrInfoService;
-
+    
     @PostMapping("/idCard")
     public Result<IdCardResponseBody> getInsuranceInfo(@Valid @RequestBody OcrRequestBody req) {
         try {
@@ -37,7 +37,7 @@ public class OcrController {
             return Result.error(ResultEnum.DEFAULT_ERROR);
         }
     }
-
+    
     @PostMapping("/business")
     public Result<BusinessLicenseResponseBody> getBusinessInfo(@Valid @RequestBody OcrRequestBody req) {
         try {
@@ -51,7 +51,7 @@ public class OcrController {
             return Result.error(ResultEnum.DEFAULT_ERROR);
         }
     }
-
+    
     @PostMapping("/driving")
     public Result<DrivingLicenseResponseBody> getDrivingInfo(@Valid @RequestBody OcrRequestBody req) {
         try {
@@ -65,11 +65,25 @@ public class OcrController {
             return Result.error(ResultEnum.DEFAULT_ERROR);
         }
     }
-
+    
     @PostMapping("/certificate")
     public Result<CertificateResponseBody> getCertificateInfo(@Valid @RequestBody OcrRequestBody req) {
         try {
             CertificateResponseBody res = ocrInfoService.certificate(req.getImgUrl());
+            return Result.success(res);
+        } catch (OCRException e) {
+            logger.warn("OCRException", e);
+            return Result.error(ResultEnum.OCR_ERROR);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+            return Result.error(ResultEnum.DEFAULT_ERROR);
+        }
+    }
+    
+    @PostMapping("/policy")
+    public Result<InsurancepolicyResponseBody> getPolicyInfo(@Valid @RequestBody OcrRequestBody req) {
+        try {
+            InsurancepolicyResponseBody res = ocrInfoService.insurance(req.getImgUrl());
             return Result.success(res);
         } catch (OCRException e) {
             logger.warn("OCRException", e);

@@ -1,18 +1,11 @@
 package cn.wghtstudio.insurance.service.impl;
 
-import cn.wghtstudio.insurance.dao.entity.BusinessLicense;
-import cn.wghtstudio.insurance.dao.entity.Certificate;
-import cn.wghtstudio.insurance.dao.entity.DrivingLicense;
-import cn.wghtstudio.insurance.dao.entity.IdCard;
-import cn.wghtstudio.insurance.dao.repository.BusinessLicenseRepository;
-import cn.wghtstudio.insurance.dao.repository.CertificateRepository;
-import cn.wghtstudio.insurance.dao.repository.DrivingLicenseRepository;
-import cn.wghtstudio.insurance.dao.repository.IdCardRepository;
+import cn.wghtstudio.insurance.dao.entity.*;
+import cn.wghtstudio.insurance.dao.repository.*;
 import cn.wghtstudio.insurance.exception.OCRException;
 import cn.wghtstudio.insurance.service.OcrInfoService;
 import cn.wghtstudio.insurance.service.entity.*;
 import cn.wghtstudio.insurance.util.ocr.*;
-import com.mysql.cj.conf.StringProperty;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -40,6 +33,9 @@ public class OcrInfoImpl implements OcrInfoService {
     
     @Resource
     private CertificateRepository certificateRepository;
+    
+    @Resource
+    private PolicyRepository policyRepository;
     
     @Override
     public IdCardResponseBody idCardInfoService(String url) throws IOException, OCRException {
@@ -133,6 +129,7 @@ public class OcrInfoImpl implements OcrInfoService {
                 frame(certificate.getFrame()).
                 build();
     }
+    
     public static String getMatcher(String regex, String source) {
         String result = "";
         Pattern pattern = Pattern.compile(regex);
@@ -148,24 +145,30 @@ public class OcrInfoImpl implements OcrInfoService {
         final String token = getOcrToken.getAuthToken();
         final InsurancepolicyResponse response = infoGetter.vehicleInsurance(url, token);
         final InsurancepolicyResponse.WordsResult wordsResult = response.getWordsResult();
-        String id = null,plateNumber = null;
+        String number = null, plateNumber = null;
         String pattern1 = "([京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼]{1}(([A-HJ-Z]{1}[A-HJ-NP-Z0-9]{5})|([A-HJ-Z]{1}(([DF]{1}[A-HJ-NP-Z0-9]{1}[0-9]{4})|([0-9]{5}[DF]{1})))|([A-HJ-Z]{1}[A-D0-9]{1}[0-9]{3}警)))|([0-9]{6}使)|((([沪粤川云桂鄂陕蒙藏黑辽渝]{1}A)|鲁B|闽D|蒙E|蒙H)[0-9]{4}领)|(WJ[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼·•]{1}[0-9]{4}[TDSHBXJ0-9]{1})|([VKHBSLJNGCE]{1}[A-DJ-PR-TVY]{1}[0-9]{5})";
-        String pattern2="[A-Z]{4}[0-9]{18}";
+        String pattern2 = "[A-Z]{4}[0-9]{18}";
         for (String word : wordsResult.getWords()) {
-            String tmpWord=getMatcher(pattern2,word);
-            if(!Objects.equals(tmpWord, "")){
-                id=tmpWord;
+            String tmpWord = getMatcher(pattern2, word);
+            if (!Objects.equals(tmpWord, "")) {
+                number = tmpWord;
             }
-            tmpWord=getMatcher(pattern1,word);
-            if(!Objects.equals(tmpWord, "")){
-                plateNumber=tmpWord;
+            tmpWord = getMatcher(pattern1, word);
+            if (!Objects.equals(tmpWord, "")) {
+                plateNumber = tmpWord;
             }
         }
         
+        Policy policy = Policy.builder().
+                url(url).
+                number(plateNumber).
+                build();
+        
+        policyRepository.createPolicy(policy);
+        
         return InsurancepolicyResponseBody.builder().
-                insuranceId(id).
+                number(number).
                 plateNumber(plateNumber).
                 build();
     }
-    
 }

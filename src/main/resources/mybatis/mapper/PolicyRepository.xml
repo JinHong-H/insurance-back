@@ -1,0 +1,25 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.wghtstudio.insurance.dao.repository.PolicyRepository">
+    <insert id="createPolicy" parameterType="Policy" useGeneratedKeys="true" keyProperty="id"
+            keyColumn="id">
+        INSERT INTO policies(url, number, order_id)
+        values (#{url}, #{number}, #{orderId})
+    </insert>
+
+    <update id="updatePolicy" parameterType="Policy">
+        UPDATE policies
+        <set>
+            <if test="url != null">
+                url = #{url},
+            </if>
+            <if test="number != null">
+                number = #{number},
+            </if>
+            <if test="orderId != null">
+                order_id = #{orderId},
+            </if>
+        </set>
+        WHERE id=#{id}
+    </update>
+</mapper>
