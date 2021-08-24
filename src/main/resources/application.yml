@@ -10,10 +10,15 @@ mybatis:
   config-location: classpath:mybatis/mybatis-config.xml
   mapper-locations: classpath:mybatis/mapper/*.xml
 
+token:
+  expireDate: 10800000
+  secret: InsuranceBack
+
 ocr:
   apiKey: 6v7zqa2sHU1B5fHObGDQiGi3
   secretKey: 8vi1ZOopPZZUEsDV9BONFex57M5V7B9g
 
-token:
-  expireDate: 10800000
-  secret: InsuranceBack
+aliyun:
+  accessKeyID: LTAI5tRKpksmrwZiJuzQSJqj
+  accessKeySecret: EZn3nwVUOV1yo0mNUeBR4BaIUJ8SCU
+  arn: acs:ram::1958639701172800:role/ramosstest
