@@ -5,8 +5,8 @@ import lombok.Data;
 
 @Data
 @Builder
-public class QueryUserResponseBody {
-	private int id;
-	private String username;
-	private int roleID;
+public class GetUserListItem {
+    private int id;
+    private String username;
+    private int role;
 }

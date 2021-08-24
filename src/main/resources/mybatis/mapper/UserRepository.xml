@@ -11,28 +11,6 @@
                      javaType="Role"/>
     </resultMap>
 
-    <insert id="addUser" useGeneratedKeys="true" keyProperty="id">
-        insert into users (username, password, role_id)
-        VALUES (#{username}, #{password}, #{roleId})
-    </insert>
-    <update id="updateUserById">
-        update users
-        set username=#{username},
-            password=#{password},
-            role_id=#{roleId}
-        where id = #{id}
-    </update>
-    <update id="updateUserPassword">
-        update users
-        set password=#{newpassword}
-        where id = #{id}
-    </update>
-    <delete id="deleteUserById">
-        delete
-        from users
-        where id = #{id}
-    </delete>
-
     <select id="getUserByUsername" resultMap="userMap">
         SELECT id, username, password, role_id
         FROM users
@@ -44,9 +22,59 @@
         FROM users
         WHERE id = #{id}
     </select>
-    <select id="queryUser">
-        select id, username, password, role_id
-        from users
-        where username like '%#{question}%'
+
+    <select id="queryUser" resultMap="userMap">
+        SELECT id, username, password, role_id
+        FROM users
+        <where>
+            <if test="username != null and username!= ''">
+                and username LIKE #{username}
+            </if>
+
+            <if test="currentUserId != null and currentUserId != 0">
+                and id != #{currentUserId}
+            </if>
+        </where>
+        LIMIT #{limit}
+        OFFSET #{offset}
     </select>
+
+    <select id="getUserCount" resultType="Integer">
+        SELECT count(*)
+        FROM users
+        <where>
+            <if test="username != null and username!= ''">
+                and username LIKE #{username}
+            </if>
+
+            <if test="currentUserId != null and currentUserId != 0">
+                and id != #{currentUserId}
+            </if>
+        </where>
+    </select>
+
+    <insert id="addUser" useGeneratedKeys="true" keyProperty="id">
+        insert into users (username, password, role_id)
+        VALUES (#{username}, #{password}, #{roleId})
+    </insert>
+
+    <update id="updateUserById">
+        update users
+        set username=#{username},
+            password=#{password},
+            role_id=#{roleId}
+        where id = #{id}
+    </update>
+
+    <update id="updateUserPassword">
+        update users
+        set password=#{newpassword}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteUserById">
+        delete
+        from users
+        where id = #{id}
+    </delete>
 </mapper>

@@ -34,7 +34,7 @@ public class InsuranceController {
     public Result<GetInsuranceListResponseBody> getInsuranceList(
             @CurrentUser User user,
             @RequestParam(defaultValue = "10", value = "pageSize") Integer pageSize,
-            @RequestParam(defaultValue = "0", value = "current") Integer current,
+            @RequestParam(defaultValue = "1", value = "current") Integer current,
             @RequestParam(value = "startTime", required = false) String filterStartTime,
             @RequestParam(value = "endTime", required = false) String filterEndTime
     ) {

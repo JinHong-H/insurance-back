@@ -3,15 +3,40 @@ package cn.wghtstudio.insurance.service.impl;
 import cn.wghtstudio.insurance.dao.entity.User;
 import cn.wghtstudio.insurance.dao.repository.UserRepository;
 import cn.wghtstudio.insurance.service.UserDealService;
-import cn.wghtstudio.insurance.service.entity.QueryUserResponseBody;
+import cn.wghtstudio.insurance.service.entity.GetUserListItem;
+import cn.wghtstudio.insurance.service.entity.GetUserListResponseBody;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class UserDealImpl implements UserDealService {
     @Resource
     UserRepository userRepository;
+
+    @Override
+    public GetUserListResponseBody getUserListService(Map<String, Object> params) {
+        GetUserListResponseBody.GetUserListResponseBodyBuilder builder = GetUserListResponseBody.builder();
+
+        int total = userRepository.getUserCount(params);
+        builder.total(total);
+
+        List<User> users = userRepository.queryUser(params);
+        List<GetUserListItem> items = users.stream().
+                map((item) -> GetUserListItem.builder().
+                        id(item.getId()).
+                        username(item.getUsername()).
+                        role(item.getRole().getValue()).
+                        build()
+                ).collect(Collectors.toList());
+
+        builder.items(items);
+
+        return builder.build();
+    }
 
     @Override
     public void addUserService(String username, String password, int roleId) {
@@ -24,30 +49,9 @@ public class UserDealImpl implements UserDealService {
     }
 
     @Override
-    public QueryUserResponseBody[] queryUserService(String question, int pageSize, int offset) {
-        User[] users = userRepository.queryUser(question, pageSize, offset);
-        int length = users.length;
-        if (length == 0) {
-            return null;
-        }
-        QueryUserResponseBody[] res = new QueryUserResponseBody[length];
-
-        for (int i = 0; i < length; i++) {
-            res[i] = QueryUserResponseBody.builder().
-                    id(users[i].getId()).
-                    username(users[i].getUsername()).
-                    roleID(users[i].getRoleID()).
-                    build();
-        }
-
-        return res;
-    }
-
-    @Override
     public void updateUserService(int id, String username, String password, int roleId) {
         userRepository.updateUserById(id, username, password, roleId);
     }
-
 
     @Override
     public void updateOwnPasswordService(int id, String newpassword) {
