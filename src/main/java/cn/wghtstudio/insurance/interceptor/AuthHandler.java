@@ -7,6 +7,7 @@ import cn.wghtstudio.insurance.util.Result;
 import cn.wghtstudio.insurance.util.ResultEnum;
 import cn.wghtstudio.insurance.util.Token;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
@@ -65,7 +66,7 @@ public class AuthHandler implements HandlerInterceptor {
     }
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) throws Exception {
         final String tokenString = getAuthorizationFromHeader(request);
         if (tokenString == null) {
             parseTokenError(response);
@@ -76,7 +77,7 @@ public class AuthHandler implements HandlerInterceptor {
             final int id = token.verify(tokenString);
             User user = userRepository.getUserByID(id);
             final List<Route> routes = user.getRole().getRouteList();
-            final String path = request.getServletPath();
+            final String path = request.getRequestURI();
             final String method = request.getMethod();
 
             boolean flag = false;

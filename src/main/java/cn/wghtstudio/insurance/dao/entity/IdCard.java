@@ -1,13 +1,20 @@
 package cn.wghtstudio.insurance.dao.entity;
 
+import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.Tolerate;
 
 @Data
+@Builder
 public class IdCard {
-    private int id;
+    private Integer id;
     private String url;
     private String name;
     private String number;
     private String address;
-    private int orderId;
+    private Integer orderId;
+
+    @Tolerate
+    public IdCard() {
+    }
 }

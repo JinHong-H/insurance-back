@@ -23,6 +23,7 @@ public class NormalGetOrderInfo implements GetOrderInfo {
 
     @Override
     public Integer getALLOrderListCount(User user, Map<String, Object> params) {
-        return orderRepository.getOrderCount(user.getId());
+        params.put("userId", user.getId());
+        return orderRepository.getOrderCount(params);
     }
 }

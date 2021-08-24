@@ -1,0 +1,28 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.wghtstudio.insurance.dao.repository.CertificateRepository">
+    <insert id="createCertificate" parameterType="Certificate" useGeneratedKeys="true" keyProperty="id"
+            keyColumn="id">
+        INSERT INTO certificates(url, engine, frame)
+        values (#{url}, #{engine}, #{frame})
+    </insert>
+
+    <update id="updateCertificate" parameterType="Certificate">
+        UPDATE certificates
+        <set>
+            <if test="url != null">
+                url = #{url},
+            </if>
+            <if test="engine != null">
+                engine = #{engine},
+            </if>
+            <if test="frame != null">
+                frame = #{frame},
+            </if>
+            <if test="orderId != null">
+                order_id = #{orderId},
+            </if>
+        </set>
+        WHERE id=#{id}
+    </update>
+</mapper>

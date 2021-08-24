@@ -10,5 +10,7 @@ import java.util.Map;
 public interface OrderRepository {
     List<Order> getOrderByUser(Map<String, Object> params);
 
-    int getOrderCount(Integer userId);
+    int getOrderCount(Map<String, Object> params);
+
+    void createOrder(Order order);
 }
