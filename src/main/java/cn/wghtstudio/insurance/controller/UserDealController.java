@@ -37,7 +37,7 @@ public class UserDealController {
                 put("currentUserId", user.getId());
                 put("limit", pageSize);
                 put("offset", (current - 1) * pageSize);
-                put("username", username);
+                put("username", username != null ? "%" + username + "%" : username);
             }
         };
 
