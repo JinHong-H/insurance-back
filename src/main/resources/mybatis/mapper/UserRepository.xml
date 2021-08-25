@@ -62,11 +62,11 @@
         update users
         <set>
             <if test="username != null and username != ''">
-                username = #{username}
+                username = #{username},
             </if>
 
             <if test="password != null and password != ''">
-                password = #{password}
+                password = #{password},
             </if>
 
             <if test="roleID != null">
