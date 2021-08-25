@@ -18,11 +18,9 @@ public interface UserRepository {
 
     int getUserCount(Map<String, Object> params);
 
-    void addUser(String username, String password, int roleId);
+    void addUser(User user);
+
+    void updateUser(User user);
 
     void deleteUserById(int id);
-
-    void updateUserById(int id, String username, String password, int roleId);
-
-    void updateUserPassword(int id, String newpassword);
 }

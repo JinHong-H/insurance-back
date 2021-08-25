@@ -53,22 +53,26 @@
         </where>
     </select>
 
-    <insert id="addUser" useGeneratedKeys="true" keyProperty="id">
+    <insert id="addUser" parameterType="User" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         insert into users (username, password, role_id)
-        VALUES (#{username}, #{password}, #{roleId})
+        VALUES (#{username}, #{password}, #{roleID})
     </insert>
 
-    <update id="updateUserById">
+    <update id="updateUser" parameterType="User" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
         update users
-        set username=#{username},
-            password=#{password},
-            role_id=#{roleId}
-        where id = #{id}
-    </update>
+        <set>
+            <if test="username != null and username != ''">
+                username = #{username}
+            </if>
 
-    <update id="updateUserPassword">
-        update users
-        set password=#{newpassword}
+            <if test="password != null and password != ''">
+                password = #{password}
+            </if>
+
+            <if test="roleID != null">
+                role_id = #{roleID}
+            </if>
+        </set>
         where id = #{id}
     </update>
 

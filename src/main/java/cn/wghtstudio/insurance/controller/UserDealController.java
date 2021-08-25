@@ -1,6 +1,8 @@
 package cn.wghtstudio.insurance.controller;
 
+import cn.wghtstudio.insurance.controller.entity.UserRequestBody;
 import cn.wghtstudio.insurance.dao.entity.User;
+import cn.wghtstudio.insurance.exception.UserExistedException;
 import cn.wghtstudio.insurance.service.UserDealService;
 import cn.wghtstudio.insurance.service.entity.GetUserListResponseBody;
 import cn.wghtstudio.insurance.util.CurrentUser;
@@ -12,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,37 +24,6 @@ public class UserDealController {
 
     @Resource
     UserDealService userDealService;
-
-    static class UserAddRequestBody {
-        @NotEmpty
-        private String username;
-        @NotEmpty
-        private String password;
-        @NotEmpty
-        private int roleId;
-    }
-
-
-    static class UserdeleteRequestBody {
-        @NotEmpty
-        private int id;
-    }
-
-    static class UpdateRequestBody {
-        @NotEmpty
-        private int id;
-        @NotEmpty
-        private String username;
-        @NotEmpty
-        private String password;
-        @NotEmpty
-        private int roleId;
-    }
-
-    static class ChangePasswdRequestBody {
-        @NotEmpty
-        private String newpassword;
-    }
 
     @GetMapping
     public Result<GetUserListResponseBody> QueryUser(
@@ -81,26 +51,49 @@ public class UserDealController {
     }
 
     @PostMapping
-    public Result<?> AddUser(@Valid @RequestBody UserAddRequestBody req) {
-        userDealService.addUserService(req.username, req.password, req.roleId);
-        return Result.success(null);
+    public Result<?> AddUser(@Valid @RequestBody UserRequestBody.AddUserRequestBody req) {
+        try {
+            userDealService.addUserService(req.getUsername(), req.getPassword(), req.getRoleId());
+            return Result.success(null);
+        } catch (UserExistedException e) {
+            logger.warn("UserExistedException", e);
+            return Result.error(ResultEnum.USER_EXISTED_ERROR);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+            return Result.error(ResultEnum.DEFAULT_ERROR);
+        }
     }
 
     @PutMapping
-    public Result<?> UpdateUser(@Valid @RequestBody UpdateRequestBody req) {
-        userDealService.updateUserService(req.id, req.username, req.password, req.roleId);
-        return Result.success(null);
+    public Result<?> UpdateUser(@Valid @RequestBody UserRequestBody.UpdateUserRequestBody req) {
+        try {
+            userDealService.updateUserService(req.getId(), req.getPassword(), req.getRoleId());
+            return Result.success(null);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+            return Result.error(ResultEnum.DEFAULT_ERROR);
+        }
     }
 
     @DeleteMapping
-    public Result<?> deleteUser(@Valid @RequestBody UserdeleteRequestBody req) {
-        userDealService.deleteUserService(req.id);
-        return Result.success(null);
+    public Result<?> deleteUser(@Valid @RequestBody UserRequestBody.DeleteUserRequestBody req) {
+        try {
+            userDealService.deleteUserService(req.getId());
+            return Result.success(null);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+            return Result.error(ResultEnum.DEFAULT_ERROR);
+        }
     }
 
     @PostMapping("/changePasswd")
-    public Result<?> changePassword(@CurrentUser User user, @Valid @RequestBody ChangePasswdRequestBody req) {
-        userDealService.updateOwnPasswordService(user.getId(), req.newpassword);
-        return Result.success(null);
+    public Result<?> changePassword(@CurrentUser User user, @Valid @RequestBody UserRequestBody.ChangePasswdRequestBody req) {
+        try {
+            userDealService.updateOwnPasswordService(user.getId(), req.getNewPassword());
+            return Result.success(null);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+            return Result.error(ResultEnum.DEFAULT_ERROR);
+        }
     }
 }

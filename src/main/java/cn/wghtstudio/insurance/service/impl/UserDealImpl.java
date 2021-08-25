@@ -2,9 +2,11 @@ package cn.wghtstudio.insurance.service.impl;
 
 import cn.wghtstudio.insurance.dao.entity.User;
 import cn.wghtstudio.insurance.dao.repository.UserRepository;
+import cn.wghtstudio.insurance.exception.UserExistedException;
 import cn.wghtstudio.insurance.service.UserDealService;
 import cn.wghtstudio.insurance.service.entity.GetUserListItem;
 import cn.wghtstudio.insurance.service.entity.GetUserListResponseBody;
+import cn.wghtstudio.insurance.util.PasswordMD5;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -39,8 +41,22 @@ public class UserDealImpl implements UserDealService {
     }
 
     @Override
-    public void addUserService(String username, String password, int roleId) {
-        userRepository.addUser(username, password, roleId);
+    public void addUserService(String username, String password, int roleId) throws UserExistedException {
+        User user = userRepository.getUserByUsername(username);
+        if (user != null) {
+            throw new UserExistedException();
+        }
+
+        User.UserBuilder builder = User.builder();
+        User createUser = builder.username(username).password(PasswordMD5.getPasswordMD5(password)).roleID(roleId).build();
+        userRepository.addUser(createUser);
+    }
+
+    @Override
+    public void updateUserService(int id, String password, int roleId) {
+        User.UserBuilder builder = User.builder();
+        User updateUser = builder.id(id).password(PasswordMD5.getPasswordMD5(password)).roleID(roleId).build();
+        userRepository.updateUser(updateUser);
     }
 
     @Override
@@ -49,12 +65,10 @@ public class UserDealImpl implements UserDealService {
     }
 
     @Override
-    public void updateUserService(int id, String username, String password, int roleId) {
-        userRepository.updateUserById(id, username, password, roleId);
-    }
+    public void updateOwnPasswordService(int id, String newPassword) {
+        User.UserBuilder builder = User.builder();
+        User updateUser = builder.id(id).password(PasswordMD5.getPasswordMD5(newPassword)).build();
 
-    @Override
-    public void updateOwnPasswordService(int id, String newpassword) {
-        userRepository.updateUserPassword(id, newpassword);
+        userRepository.updateUser(updateUser);
     }
 }
