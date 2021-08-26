@@ -8,4 +8,6 @@ import lombok.Data;
 public class InsurancepolicyResponseBody {
     private String plateNumber;
     private String number;
+    private String frame;
+    private String engine;
 }

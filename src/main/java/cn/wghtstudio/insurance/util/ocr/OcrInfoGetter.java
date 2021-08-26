@@ -102,7 +102,7 @@ public class OcrInfoGetter {
     }
     
     public InsurancepolicyResponse vehicleInsurance(String imgUrl, String token) throws IOException, OCRException {
-        final HttpUrl url = getUrl("https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic", token);
+        final HttpUrl url = getUrl("https://aip.baidubce.com/rest/2.0/ocr/v1/accurate_basic", token);
         RequestBody requestBody = getRequestBody(Map.of("url", imgUrl));
         String response = execRequest(url, requestBody);
         ObjectMapper objectMapper = new ObjectMapper();
