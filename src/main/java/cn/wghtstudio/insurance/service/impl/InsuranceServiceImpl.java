@@ -6,6 +6,7 @@ import cn.wghtstudio.insurance.dao.repository.*;
 import cn.wghtstudio.insurance.service.InsuranceService;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListItem;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListResponseBody;
+import cn.wghtstudio.insurance.util.LicensePlateWhenNewFactory;
 import cn.wghtstudio.insurance.util.excel.ExcelColumn;
 import cn.wghtstudio.insurance.util.excel.ExcelUtil;
 import lombok.Builder;
@@ -79,16 +80,6 @@ public class InsuranceServiceImpl implements InsuranceService {
         return simpleDateFormat.format(date);
     }
 
-    private static String getLicensePlateWhenNew(String engine) {
-        final int engineLength = engine.length();
-        int startPos = engineLength - 6;
-        if (startPos < 0) {
-            startPos = 0;
-        }
-
-        return "新车-" + engine.substring(startPos);
-    }
-
     @Override
     public GetInsuranceListResponseBody getAllList(User user, Map<String, Object> params) {
         GetInsuranceListResponseBody.GetInsuranceListResponseBodyBuilder builder = GetInsuranceListResponseBody.builder();
@@ -125,7 +116,7 @@ public class InsuranceServiceImpl implements InsuranceService {
             if (item.getDrivingLicense() != null) {
                 itemBuilder.licensePlate(item.getDrivingLicense().getPlateNumber());
             } else if (item.getCertificate() != null) {
-                itemBuilder.licensePlate(InsuranceServiceImpl.getLicensePlateWhenNew(item.getCertificate().getEngine()));
+                itemBuilder.licensePlate(LicensePlateWhenNewFactory.getLicensePlateWhenNew(item.getCertificate().getEngine()));
             }
 
             if (item.getPolicy() != null) {
@@ -236,7 +227,7 @@ public class InsuranceServiceImpl implements InsuranceService {
                         engine(drivingLicense.getEngine());
             } else if (item.getCertificate() != null) {
                 Certificate certificate = item.getCertificate();
-                builder.licensePlate(InsuranceServiceImpl.getLicensePlateWhenNew(item.getCertificate().getEngine())).
+                builder.licensePlate(LicensePlateWhenNewFactory.getLicensePlateWhenNew(item.getCertificate().getEngine())).
                         frame(certificate.getFrame()).
                         engine(certificate.getEngine());
             }

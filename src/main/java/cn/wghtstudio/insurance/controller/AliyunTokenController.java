@@ -1,11 +1,7 @@
 package cn.wghtstudio.insurance.controller;
 
 
-import cn.wghtstudio.insurance.exception.PasswordErrorException;
-import cn.wghtstudio.insurance.exception.SignTokenException;
-import cn.wghtstudio.insurance.exception.UserNotFoundException;
 import cn.wghtstudio.insurance.service.AliyunService;
-import cn.wghtstudio.insurance.service.entity.LoginResponseBody;
 import cn.wghtstudio.insurance.service.entity.STSTokenResponseToken;
 import cn.wghtstudio.insurance.util.Result;
 import cn.wghtstudio.insurance.util.ResultEnum;
@@ -20,8 +16,8 @@ import javax.annotation.Resource;
 
 @RestController
 @RequestMapping("/aliyun")
-public class AliyunToken {
-    private final Logger logger = LoggerFactory.getLogger(AliyunToken.class);
+public class AliyunTokenController {
+    private final Logger logger = LoggerFactory.getLogger(AliyunTokenController.class);
 
     @Resource
     private AliyunService aliyunService;
