@@ -71,6 +71,9 @@ public class InsuranceServiceImpl implements InsuranceService {
     @Resource
     CertificateRepository certificateRepository;
 
+    @Resource
+    OtherFileRepository otherFileRepository;
+
     private static String getFormatDate(Date date) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         return simpleDateFormat.format(date);
@@ -196,9 +199,9 @@ public class InsuranceServiceImpl implements InsuranceService {
             certificateRepository.updateCertificate(certificate);
         }
 
-//        if (req.getOtherFileId() != null) {
-//
-//        }
+        if (req.getOtherFileId() != null) {
+            otherFileRepository.updateOtherFiles(Map.of("orderId", orderId, "otherIds", req.getOtherFileId()));
+        }
     }
 
     @Override

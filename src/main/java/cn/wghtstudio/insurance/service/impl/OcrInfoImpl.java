@@ -1,19 +1,10 @@
 package cn.wghtstudio.insurance.service.impl;
 
-import cn.wghtstudio.insurance.dao.entity.BusinessLicense;
-import cn.wghtstudio.insurance.dao.entity.Certificate;
-import cn.wghtstudio.insurance.dao.entity.DrivingLicense;
-import cn.wghtstudio.insurance.dao.entity.IdCard;
-import cn.wghtstudio.insurance.dao.repository.BusinessLicenseRepository;
-import cn.wghtstudio.insurance.dao.repository.CertificateRepository;
-import cn.wghtstudio.insurance.dao.repository.DrivingLicenseRepository;
-import cn.wghtstudio.insurance.dao.repository.IdCardRepository;
+import cn.wghtstudio.insurance.dao.entity.*;
+import cn.wghtstudio.insurance.dao.repository.*;
 import cn.wghtstudio.insurance.exception.OCRException;
 import cn.wghtstudio.insurance.service.OcrInfoService;
-import cn.wghtstudio.insurance.service.entity.BusinessLicenseResponseBody;
-import cn.wghtstudio.insurance.service.entity.CertificateResponseBody;
-import cn.wghtstudio.insurance.service.entity.DrivingLicenseResponseBody;
-import cn.wghtstudio.insurance.service.entity.IdCardResponseBody;
+import cn.wghtstudio.insurance.service.entity.*;
 import cn.wghtstudio.insurance.util.ocr.*;
 import org.springframework.stereotype.Component;
 
@@ -39,6 +30,9 @@ public class OcrInfoImpl implements OcrInfoService {
 
     @Resource
     private CertificateRepository certificateRepository;
+
+    @Resource
+    private OtherFileRepository otherFileRepository;
 
     @Override
     public IdCardResponseBody idCardInfoService(String url) throws IOException, OCRException {
@@ -113,7 +107,7 @@ public class OcrInfoImpl implements OcrInfoService {
     }
 
     @Override
-    public CertificateResponseBody certificate(String url) throws IOException, OCRException {
+    public CertificateResponseBody certificateInfoService(String url) throws IOException, OCRException {
         final String token = getOcrToken.getAuthToken();
         final CertificateResponse response = infoGetter.vehicleCertificate(url, token);
 
@@ -130,6 +124,19 @@ public class OcrInfoImpl implements OcrInfoService {
                 id(certificate.getId()).
                 engine(certificate.getEngine()).
                 frame(certificate.getFrame()).
+                build();
+    }
+
+    @Override
+    public OtherFileResponseBody otherFileService(String url) {
+        OtherFile otherFile = OtherFile.builder().
+                url(url).
+                build();
+
+        otherFileRepository.createOtherFile(otherFile);
+
+        return OtherFileResponseBody.builder().
+                id(otherFile.getId()).
                 build();
     }
 }

@@ -1,0 +1,22 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.wghtstudio.insurance.dao.repository.OtherFileRepository">
+    <insert id="createOtherFile" parameterType="OtherFile" useGeneratedKeys="true" keyProperty="id"
+            keyColumn="id">
+        INSERT INTO other_file(url)
+        values (#{url})
+    </insert>
+
+    <update id="updateOtherFiles">
+        UPDATE certificates
+        <set>
+            <if test="orderId != null">
+                order_id = #{orderId},
+            </if>
+        </set>
+        WHERE id in
+        <foreach collection="otherIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper>
