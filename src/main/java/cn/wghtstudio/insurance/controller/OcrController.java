@@ -69,11 +69,22 @@ public class OcrController {
     @PostMapping("/certificate")
     public Result<CertificateResponseBody> getCertificateInfo(@Valid @RequestBody OcrRequestBody req) {
         try {
-            CertificateResponseBody res = ocrInfoService.certificate(req.getImgUrl());
+            CertificateResponseBody res = ocrInfoService.certificateInfoService(req.getImgUrl());
             return Result.success(res);
         } catch (OCRException e) {
             logger.warn("OCRException", e);
             return Result.error(ResultEnum.OCR_ERROR);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+            return Result.error(ResultEnum.DEFAULT_ERROR);
+        }
+    }
+
+    @PostMapping("/otherFile")
+    public Result<OtherFileResponseBody> saveOtherFile(@Valid @RequestBody OcrRequestBody req) {
+        try {
+            OtherFileResponseBody res = ocrInfoService.otherFileService(req.getImgUrl());
+            return Result.success(res);
         } catch (Exception e) {
             logger.warn("Exception", e);
             return Result.error(ResultEnum.DEFAULT_ERROR);
