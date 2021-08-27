@@ -2,6 +2,7 @@ package cn.wghtstudio.insurance.dao.entity;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.Tolerate;
 
 import java.util.Date;
 
@@ -24,4 +25,8 @@ public class Order {
     private DrivingLicense drivingLicense;
     private Certificate certificate;
     private Policy policy;
+
+    @Tolerate
+    public Order() {
+    }
 }

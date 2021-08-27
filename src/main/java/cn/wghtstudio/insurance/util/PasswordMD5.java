@@ -7,6 +7,9 @@ import java.security.NoSuchAlgorithmException;
 
 public class PasswordMD5 {
     public static String getPasswordMD5(String password) {
+        if (password == null) {
+            return null;
+        }
         try {
             MessageDigest messageDigest = MessageDigest.getInstance("MD5");
             messageDigest.update(password.getBytes(StandardCharsets.UTF_8));

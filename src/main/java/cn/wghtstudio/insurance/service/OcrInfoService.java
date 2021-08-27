@@ -12,7 +12,9 @@ public interface OcrInfoService {
 
     DrivingLicenseResponseBody drivingInfoService(String url) throws IOException, OCRException;
 
-    CertificateResponseBody certificate(String url) throws IOException, OCRException;
-    
+    CertificateResponseBody certificateInfoService(String url) throws IOException, OCRException;
+
+    OtherFileResponseBody otherFileService(String url);
+
     InsurancepolicyResponseBody insurance(String url) throws IOException, OCRException;
 }

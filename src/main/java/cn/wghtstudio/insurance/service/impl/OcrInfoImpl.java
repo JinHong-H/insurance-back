@@ -18,30 +18,34 @@ import java.util.regex.Pattern;
 public class OcrInfoImpl implements OcrInfoService {
     @Resource
     private OcrInfoGetter infoGetter;
-    
+
     @Resource
     private GetOcrToken getOcrToken;
-    
+
     @Resource
     private IdCardRepository idCardRepository;
-    
+
     @Resource
     private BusinessLicenseRepository businessLicenseRepository;
-    
+
     @Resource
     private DrivingLicenseRepository drivingLicenseRepository;
-    
+
     @Resource
     private CertificateRepository certificateRepository;
-    
+
     @Resource
     private PolicyRepository policyRepository;
-    
+
+
+    @Resource
+    private OtherFileRepository otherFileRepository;
+
     @Override
     public IdCardResponseBody idCardInfoService(String url) throws IOException, OCRException {
         final String token = getOcrToken.getAuthToken();
         final IdCardResponse response = infoGetter.idCard(url, token);
-        
+
         final IdCardResponse.WordsResult wordsResult = response.getWordsResult();
         IdCard idCard = IdCard.builder().
                 url(url).
@@ -49,9 +53,9 @@ public class OcrInfoImpl implements OcrInfoService {
                 address(wordsResult.getAddress().getWords()).
                 number(wordsResult.getNumber().getWords()).
                 build();
-        
+
         idCardRepository.createIdCard(idCard);
-        
+
         return IdCardResponseBody.builder().
                 id(idCard.getId()).
                 name(idCard.getName()).
@@ -59,12 +63,12 @@ public class OcrInfoImpl implements OcrInfoService {
                 number(idCard.getNumber()).
                 build();
     }
-    
+
     @Override
     public BusinessLicenseResponseBody businessInfoService(String url) throws IOException, OCRException {
         final String token = getOcrToken.getAuthToken();
         final BusinessResponse response = infoGetter.businessLicense(url, token);
-        
+
         final BusinessResponse.WordsResult wordsResult = response.getWordsResult();
         BusinessLicense businessLicense = BusinessLicense.builder().
                 url(url).
@@ -72,9 +76,9 @@ public class OcrInfoImpl implements OcrInfoService {
                 address(wordsResult.getAddress().getWords()).
                 number(wordsResult.getCreditCode().getWords()).
                 build();
-        
+
         businessLicenseRepository.createBusinessLicense(businessLicense);
-        
+
         return BusinessLicenseResponseBody.builder().
                 id(businessLicense.getId()).
                 name(businessLicense.getName()).
@@ -82,12 +86,12 @@ public class OcrInfoImpl implements OcrInfoService {
                 number(businessLicense.getNumber()).
                 build();
     }
-    
+
     @Override
     public DrivingLicenseResponseBody drivingInfoService(String url) throws IOException, OCRException {
         final String token = getOcrToken.getAuthToken();
         final DrivingLicenseResponse response = infoGetter.vehicleLicense(url, token);
-        
+
         final DrivingLicenseResponse.WordsResult wordsResult = response.getWordsResult();
         DrivingLicense drivingLicense = DrivingLicense.builder().
                 url(url).
@@ -97,9 +101,9 @@ public class OcrInfoImpl implements OcrInfoService {
                 frame(wordsResult.getCarVerify().getWords()).
                 type(wordsResult.getModel().getWords()).
                 build();
-        
+
         drivingLicenseRepository.createDrivingLicense(drivingLicense);
-        
+
         return DrivingLicenseResponseBody.builder().
                 id(drivingLicense.getId()).
                 plate(drivingLicense.getPlateNumber()).
@@ -108,28 +112,41 @@ public class OcrInfoImpl implements OcrInfoService {
                 type(drivingLicense.getType()).
                 build();
     }
-    
+
     @Override
-    public CertificateResponseBody certificate(String url) throws IOException, OCRException {
+    public CertificateResponseBody certificateInfoService(String url) throws IOException, OCRException {
         final String token = getOcrToken.getAuthToken();
         final CertificateResponse response = infoGetter.vehicleCertificate(url, token);
-        
+
         final CertificateResponse.WordsResult wordsResult = response.getWordsResult();
         Certificate certificate = Certificate.builder().
                 url(url).
                 engine(wordsResult.getEngineNo()).
                 frame(wordsResult.getVinNo()).
                 build();
-        
+
         certificateRepository.createCertificate(certificate);
-        
+
         return CertificateResponseBody.builder().
                 id(certificate.getId()).
                 engine(certificate.getEngine()).
                 frame(certificate.getFrame()).
                 build();
     }
-    
+
+    @Override
+    public OtherFileResponseBody otherFileService(String url) {
+        OtherFile otherFile = OtherFile.builder().
+                url(url).
+                build();
+
+        otherFileRepository.createOtherFile(otherFile);
+
+        return OtherFileResponseBody.builder().
+                id(otherFile.getId()).
+                build();
+    }
+
     public static String getMatcher(String regex, String source) {
         String result = "";
         Pattern pattern = Pattern.compile(regex);
@@ -139,8 +156,8 @@ public class OcrInfoImpl implements OcrInfoService {
         }
         return result;
     }
-    
-    
+
+
     public InsurancepolicyResponseBody insurance(String url) throws IOException, OCRException {
         final String token = getOcrToken.getAuthToken();
         final InsurancepolicyResponse response = infoGetter.vehicleInsurance(url, token);
@@ -169,12 +186,12 @@ public class OcrInfoImpl implements OcrInfoService {
                 engineNumber = tmpWord;
             }
         }
-        
+
         String tmpWord = getMatcher(pattern5, engineNumber);
         if (!Objects.equals(tmpWord, "")) {
             engineNumber = tmpWord;
         }
-        
+
         Policy policy = Policy.builder().
                 url(url).
                 number(plateNumber).
@@ -182,9 +199,9 @@ public class OcrInfoImpl implements OcrInfoService {
                 engine(engineNumber).
                 plate(plateNumber).
                 build();
-        
+
         policyRepository.createPolicy(policy);
-        
+
         return InsurancepolicyResponseBody.builder().
                 number(number).
                 plateNumber(plateNumber).

@@ -6,7 +6,8 @@
         <result property="username" column="username"/>
         <result property="password" column="password"/>
         <result property="roleID" column="role_id"/>
-        <association property="role" column="role_id" select="cn.wghtstudio.insurance.dao.repository.RoleRepository.getRoleByID"
+        <association property="role" column="role_id"
+                     select="cn.wghtstudio.insurance.dao.repository.RoleRepository.getRoleByID"
                      javaType="Role"/>
     </resultMap>
 
@@ -21,4 +22,63 @@
         FROM users
         WHERE id = #{id}
     </select>
+
+    <select id="queryUser" resultMap="userMap">
+        SELECT id, username, password, role_id
+        FROM users
+        <where>
+            <if test="username != null and username!= ''">
+                and username LIKE #{username}
+            </if>
+
+            <if test="currentUserId != null and currentUserId != 0">
+                and id != #{currentUserId}
+            </if>
+        </where>
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="getUserCount" resultType="Integer">
+        SELECT count(*)
+        FROM users
+        <where>
+            <if test="username != null and username!= ''">
+                and username LIKE #{username}
+            </if>
+
+            <if test="currentUserId != null and currentUserId != 0">
+                and id != #{currentUserId}
+            </if>
+        </where>
+    </select>
+
+    <insert id="addUser" parameterType="User" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into users (username, password, role_id)
+        VALUES (#{username}, #{password}, #{roleID})
+    </insert>
+
+    <update id="updateUser" parameterType="User" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+        update users
+        <set>
+            <if test="username != null and username != ''">
+                username = #{username},
+            </if>
+
+            <if test="password != null and password != ''">
+                password = #{password},
+            </if>
+
+            <if test="roleID != null">
+                role_id = #{roleID}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteUserById">
+        delete
+        from users
+        where id = #{id}
+    </delete>
 </mapper>

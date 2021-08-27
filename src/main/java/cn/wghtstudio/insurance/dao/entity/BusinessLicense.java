@@ -2,6 +2,7 @@ package cn.wghtstudio.insurance.dao.entity;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.Tolerate;
 
 @Data
 @Builder
@@ -12,4 +13,8 @@ public class BusinessLicense {
     private String address;
     private String number;
     private Integer orderId;
+
+    @Tolerate
+    public BusinessLicense() {
+    }
 }
