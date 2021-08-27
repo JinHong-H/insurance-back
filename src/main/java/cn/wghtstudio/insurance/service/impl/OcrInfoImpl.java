@@ -13,11 +13,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -28,15 +27,90 @@ class PolicyDealImpl implements Runnable {
 
     private final PolicyRepository policyRepository;
 
+    private Integer policyId;
+
+    private String getInsuranceNumber(String words) {
+        Pattern pattern = Pattern.compile("保险单号\\s?[:：]\\s?([A-Z]{4}[0-9]{18})");
+        Matcher matcher = pattern.matcher(words);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+    private String getPlateNumber(String words) {
+        Pattern pattern = Pattern.compile("车牌号\\s?[:：]\\s?([京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼](([A-HJ-Z][A-HJ-NP-Z0-9]{5})|([A-HJ-Z](([DF][A-HJ-NP-Z0-9][0-9]{4})|([0-9]{5}[DF])))|([A-HJ-Z][A-D0-9][0-9]{3}警)))|([0-9]{6}使)|((([沪粤川云桂鄂陕蒙藏黑辽渝]A)|鲁B|闽D|蒙E|蒙H)[0-9]{4}领)|(WJ[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼·•][0-9]{4}[TDSHBXJ0-9])|([VKHBSLJNGCE][A-DJ-PR-TVY][0-9]{5})");
+        Matcher matcher = pattern.matcher(words);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+    private String getFrameNumber(String words) {
+        Pattern pattern = Pattern.compile("车架号\\s?[:：]\\s?([A-Z]{3}[A-z0-9]{14})");
+        Matcher matcher = pattern.matcher(words);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+    private String getEngineNumber(String words) {
+        Pattern pattern = Pattern.compile("发动机号\\s?[:：]\\s?([A-Z0-9]{6,11})");
+        Matcher matcher = pattern.matcher(words);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
     private void createItemInDB() {
         Policy policy = Policy.builder().
                 url("https://versicherung.oss-cn-beijing.aliyuncs.com/" + filename).
                 build();
         policyRepository.createPolicy(policy);
+        policyId = policy.getId();
     }
 
     private void putPolicyToOSS() {
         AliyunUtil.putObject(filename, new ByteArrayInputStream(file));
+    }
+
+    private void doOCR() throws IOException, OCRException {
+        String b64encoded = Base64.getEncoder().encodeToString(file);
+        final String token = GetOcrToken.getAuthToken();
+
+        final InsurancePolicyResponse response = OcrInfoGetter.vehicleInsurance(b64encoded, token);
+        final List<InsurancePolicyResponse.WordsResult> wordsResultList = response.getWordsResult();
+
+        String number = null, plateNumber = null, frame = null, engine = null;
+        for (InsurancePolicyResponse.WordsResult wordsResult : wordsResultList) {
+            String words = wordsResult.getWords();
+            if (number == null) {
+                number = getInsuranceNumber(words);
+            }
+
+            if (plateNumber == null) {
+                plateNumber = getPlateNumber(words);
+            }
+
+            if (frame == null) {
+                frame = getFrameNumber(words);
+            }
+
+            if (engine == null) {
+                engine = getEngineNumber(words);
+            }
+        }
+
+        if (policyId != null) {
+            Policy policy = Policy.builder().
+                    id(policyId).
+                    number(number).
+                    build();
+            policyRepository.updatePolicy(policy);
+        }
     }
 
     public PolicyDealImpl(String filename, byte[] file, PolicyRepository policyRepository) {
@@ -47,20 +121,18 @@ class PolicyDealImpl implements Runnable {
 
     @Override
     public void run() {
-        createItemInDB();
-
-        putPolicyToOSS();
+        try {
+            createItemInDB();
+            putPolicyToOSS();
+            doOCR();
+        } catch (OCRException e) {
+        } catch (IOException e) {
+        }
     }
 }
 
 @Component
 public class OcrInfoImpl implements OcrInfoService {
-    @Resource
-    private OcrInfoGetter infoGetter;
-
-    @Resource
-    private GetOcrToken getOcrToken;
-
     @Resource
     private IdCardRepository idCardRepository;
 
@@ -75,7 +147,6 @@ public class OcrInfoImpl implements OcrInfoService {
 
     @Resource
     private PolicyRepository policyRepository;
-
 
     @Resource
     private OtherFileRepository otherFileRepository;
@@ -119,10 +190,46 @@ public class OcrInfoImpl implements OcrInfoService {
         return streamMap;
     }
 
+//    private String getInsuranceNumber(String words) {
+//        Pattern pattern = Pattern.compile("保险单号\\s?[:：]\\s?([A-Z]{4}[0-9]{18})");
+//        Matcher matcher = pattern.matcher(words);
+//        if (matcher.find()) {
+//            return matcher.group(1);
+//        }
+//        return null;
+//    }
+//
+//    private String getPlateNumber(String words) {
+//        Pattern pattern = Pattern.compile("车牌号\\s?[:：]\\s?([京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼](([A-HJ-Z][A-HJ-NP-Z0-9]{5})|([A-HJ-Z](([DF][A-HJ-NP-Z0-9][0-9]{4})|([0-9]{5}[DF])))|([A-HJ-Z][A-D0-9][0-9]{3}警)))|([0-9]{6}使)|((([沪粤川云桂鄂陕蒙藏黑辽渝]A)|鲁B|闽D|蒙E|蒙H)[0-9]{4}领)|(WJ[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼·•][0-9]{4}[TDSHBXJ0-9])|([VKHBSLJNGCE][A-DJ-PR-TVY][0-9]{5})");
+//        Matcher matcher = pattern.matcher(words);
+//        if (matcher.find()) {
+//            return matcher.group(1);
+//        }
+//        return null;
+//    }
+//
+//    private String getFrameNumber(String words) {
+//        Pattern pattern = Pattern.compile("车架号\\s?[:：]\\s?([A-Z]{3}[A-z0-9]{14})");
+//        Matcher matcher = pattern.matcher(words);
+//        if (matcher.find()) {
+//            return matcher.group(1);
+//        }
+//        return null;
+//    }
+//
+//    private String getEngineNumber(String words) {
+//        Pattern pattern = Pattern.compile("发动机号\\s?[:：]\\s?([A-Z0-9]{6,11})");
+//        Matcher matcher = pattern.matcher(words);
+//        if (matcher.find()) {
+//            return matcher.group(1);
+//        }
+//        return null;
+//    }
+
     @Override
     public IdCardResponseBody idCardInfoService(String url) throws IOException, OCRException {
-        final String token = getOcrToken.getAuthToken();
-        final IdCardResponse response = infoGetter.idCard(url, token);
+        final String token = GetOcrToken.getAuthToken();
+        final IdCardResponse response = OcrInfoGetter.idCard(url, token);
 
         final IdCardResponse.WordsResult wordsResult = response.getWordsResult();
         IdCard idCard = IdCard.builder().
@@ -144,8 +251,8 @@ public class OcrInfoImpl implements OcrInfoService {
 
     @Override
     public BusinessLicenseResponseBody businessInfoService(String url) throws IOException, OCRException {
-        final String token = getOcrToken.getAuthToken();
-        final BusinessResponse response = infoGetter.businessLicense(url, token);
+        final String token = GetOcrToken.getAuthToken();
+        final BusinessResponse response = OcrInfoGetter.businessLicense(url, token);
 
         final BusinessResponse.WordsResult wordsResult = response.getWordsResult();
         BusinessLicense businessLicense = BusinessLicense.builder().
@@ -167,8 +274,8 @@ public class OcrInfoImpl implements OcrInfoService {
 
     @Override
     public DrivingLicenseResponseBody drivingInfoService(String url) throws IOException, OCRException {
-        final String token = getOcrToken.getAuthToken();
-        final DrivingLicenseResponse response = infoGetter.vehicleLicense(url, token);
+        final String token = GetOcrToken.getAuthToken();
+        final DrivingLicenseResponse response = OcrInfoGetter.vehicleLicense(url, token);
 
         final DrivingLicenseResponse.WordsResult wordsResult = response.getWordsResult();
         DrivingLicense drivingLicense = DrivingLicense.builder().
@@ -193,8 +300,8 @@ public class OcrInfoImpl implements OcrInfoService {
 
     @Override
     public CertificateResponseBody certificateInfoService(String url) throws IOException, OCRException {
-        final String token = getOcrToken.getAuthToken();
-        final CertificateResponse response = infoGetter.vehicleCertificate(url, token);
+        final String token = GetOcrToken.getAuthToken();
+        final CertificateResponse response = OcrInfoGetter.vehicleCertificate(url, token);
 
         final CertificateResponse.WordsResult wordsResult = response.getWordsResult();
         Certificate certificate = Certificate.builder().
@@ -242,6 +349,35 @@ public class OcrInfoImpl implements OcrInfoService {
         // PDF 直接上传写入数据库
         if (splitNames[splitNames.length - 1].equals("pdf")) {
             String OSSPath = "policy/" + getPolicyName(originName);
+//            String b64encoded = Base64.getEncoder().encodeToString(file.getBytes());
+//            final String token = GetOcrToken.getAuthToken();
+//
+//            final InsurancePolicyResponse response = OcrInfoGetter.vehicleInsurance(b64encoded, token);
+//            final List<InsurancePolicyResponse.WordsResult> wordsResultList = response.getWordsResult();
+//            System.out.println(wordsResultList);
+//            String number = null, plateNumber = null, frame = null, engine = null;
+//            for (InsurancePolicyResponse.WordsResult wordsResult : wordsResultList) {
+//                String words = wordsResult.getWords();
+//                if (number == null) {
+//                    number = getInsuranceNumber(words);
+//                }
+//
+//                if (plateNumber == null) {
+//                    plateNumber = getPlateNumber(words);
+//                }
+//
+//                if (frame == null) {
+//                    frame = getFrameNumber(words);
+//                }
+//
+//                if (engine == null) {
+//                    engine = getEngineNumber(words);
+//                }
+//            }
+//            System.out.println(number);
+//            System.out.println(plateNumber);
+//            System.out.println(frame);
+//            System.out.println(engine);
             executorService.submit(new PolicyDealImpl(OSSPath, file.getBytes(), policyRepository));
             return;
         }
@@ -259,67 +395,4 @@ public class OcrInfoImpl implements OcrInfoService {
 
         throw new FileTypeException();
     }
-
-//    public static String getMatcher(String regex, String source) {
-//        String result = "";
-//        Pattern pattern = Pattern.compile(regex);
-//        Matcher matcher = pattern.matcher(source);
-//        while (matcher.find()) {
-//            result = matcher.group();
-//        }
-//        return result;
-//    }
-
-
-//    public InsurancepolicyResponseBody insurance(String url) throws IOException, OCRException {
-//        final String token = getOcrToken.getAuthToken();
-//        final InsurancepolicyResponse response = infoGetter.vehicleInsurance(url, token);
-//        final InsurancepolicyResponse.WordsResult wordsResult = response.getWordsResult();
-//        String number = null, plateNumber = null, frame = null, engineNumber = null;
-//        String pattern1 = "([京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼]{1}(([A-HJ-Z]{1}[A-HJ-NP-Z0-9]{5})|([A-HJ-Z]{1}(([DF]{1}[A-HJ-NP-Z0-9]{1}[0-9]{4})|([0-9]{5}[DF]{1})))|([A-HJ-Z]{1}[A-D0-9]{1}[0-9]{3}警)))|([0-9]{6}使)|((([沪粤川云桂鄂陕蒙藏黑辽渝]{1}A)|鲁B|闽D|蒙E|蒙H)[0-9]{4}领)|(WJ[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼·•]{1}[0-9]{4}[TDSHBXJ0-9]{1})|([VKHBSLJNGCE]{1}[A-DJ-PR-TVY]{1}[0-9]{5})";
-//        String pattern2 = "[A-Z]{4}[0-9]{16}";
-//        String pattern3 = "[A-Z]{3}[A-z0-9]{14}";
-//        String pattern4 = "(发动机号:[A-Z0-9]{6,11})";
-//        String pattern5 = "[A-Z0-9]{6,11}";
-//        for (String word : wordsResult.getWords()) {
-//            String tmpWord = getMatcher(pattern2, word);
-//            if (!Objects.equals(tmpWord, "")) {
-//                number = tmpWord;
-//            }
-//            tmpWord = getMatcher(pattern1, word);
-//            if (!Objects.equals(tmpWord, "")) {
-//                plateNumber = tmpWord;
-//            }
-//            tmpWord = getMatcher(pattern3, word);
-//            if (!Objects.equals(tmpWord, "")) {
-//                frame = tmpWord;
-//            }
-//            tmpWord = getMatcher(pattern4, word);
-//            if (!Objects.equals(tmpWord, "")) {
-//                engineNumber = tmpWord;
-//            }
-//        }
-//
-//        String tmpWord = getMatcher(pattern5, engineNumber);
-//        if (!Objects.equals(tmpWord, "")) {
-//            engineNumber = tmpWord;
-//        }
-//
-//        Policy policy = Policy.builder().
-//                url(url).
-//                number(plateNumber).
-//                frame(frame).
-//                engine(engineNumber).
-//                plate(plateNumber).
-//                build();
-//
-//        policyRepository.createPolicy(policy);
-//
-//        return InsurancepolicyResponseBody.builder().
-//                number(number).
-//                plateNumber(plateNumber).
-//                frame(frame).
-//                engine(engineNumber).
-//                build();
-//    }
 }

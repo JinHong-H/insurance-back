@@ -8,19 +8,19 @@ import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class InsurancepolicyResponse {
+public class InsurancePolicyResponse {
     @JsonProperty("log_id")
     private String logId;
     @JsonProperty("wordsResult_num")
     private int wordsResultNum;
     @JsonProperty("words_result")
-    private WordsResult wordsResult;
+    private List<WordsResult> wordsResult;
     @JsonProperty("error_code")
     private Integer errorCode;
-    
+
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class WordsResult {
-        private List<String> words;
+        private String words;
     }
 }
