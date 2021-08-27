@@ -18,7 +18,8 @@ public enum ResultEnum {
     TOKEN_GET_ERROR(20006, "OCR获取签名失败"),
     OCR_ERROR(20007, "OCR 失败，请调整图片"),
     ALIYUN_AUTH_ERROR(20008, "阿里云授权失败，请重试"),
-    USER_EXISTED_ERROR(20009, "用户已存在，请检查用户名");
+    USER_EXISTED_ERROR(20009, "用户已存在，请检查用户名"),
+    FILE_TYPE_ERROR(20010, "请检查上传的文件格式，仅支持zip与pdf");
 
     private int code;
     private String msg;

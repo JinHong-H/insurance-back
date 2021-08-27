@@ -6,6 +6,6 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface PolicyRepository {
     void createPolicy(Policy policy);
-    
+
     void updatePolicy(Policy policy);
 }
