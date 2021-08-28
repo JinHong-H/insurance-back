@@ -8,6 +8,9 @@ import cn.wghtstudio.insurance.service.OcrInfoService;
 import cn.wghtstudio.insurance.service.entity.*;
 import cn.wghtstudio.insurance.util.AliyunUtil;
 import cn.wghtstudio.insurance.util.ocr.*;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +29,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 class PolicyDealImpl implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(PolicyDealImpl.class);
+
     private final String filename;
 
     private final byte[] file;
@@ -36,6 +41,9 @@ class PolicyDealImpl implements Runnable {
 
     private Integer policyId;
 
+    private String number = null, plateNumber = null, frame = null, engine = null;
+
+    @Nullable
     private String getInsuranceNumber(String words) {
         Pattern pattern = Pattern.compile("保险单号\\s?[:：]\\s?([A-Z]{4}[0-9]{18})");
         Matcher matcher = pattern.matcher(words);
@@ -45,6 +53,7 @@ class PolicyDealImpl implements Runnable {
         return null;
     }
 
+    @Nullable
     private String getPlateNumber(String words) {
         Pattern pattern = Pattern.compile("车牌号\\s?[:：]\\s?([京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼](([A-HJ-Z][A-HJ-NP-Z0-9]{5})|([A-HJ-Z](([DF][A-HJ-NP-Z0-9][0-9]{4})|([0-9]{5}[DF])))|([A-HJ-Z][A-D0-9][0-9]{3}警)))|([0-9]{6}使)|((([沪粤川云桂鄂陕蒙藏黑辽渝]A)|鲁B|闽D|蒙E|蒙H)[0-9]{4}领)|(WJ[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼·•][0-9]{4}[TDSHBXJ0-9])|([VKHBSLJNGCE][A-DJ-PR-TVY][0-9]{5})");
         Matcher matcher = pattern.matcher(words);
@@ -54,6 +63,7 @@ class PolicyDealImpl implements Runnable {
         return null;
     }
 
+    @Nullable
     private String getFrameNumber(String words) {
         Pattern pattern = Pattern.compile("车架号\\s?[:：]\\s?([A-Z]{3}[A-z0-9]{14})");
         Matcher matcher = pattern.matcher(words);
@@ -63,6 +73,7 @@ class PolicyDealImpl implements Runnable {
         return null;
     }
 
+    @Nullable
     private String getEngineNumber(String words) {
         Pattern pattern = Pattern.compile("发动机号\\s?[:：]\\s?([A-Z0-9]{6,11})");
         Matcher matcher = pattern.matcher(words);
@@ -92,7 +103,6 @@ class PolicyDealImpl implements Runnable {
         final List<InsurancePolicyResponse.WordsResult> wordsResultList = response.getWordsResult();
 
         // 从 OCR 结果中提取保险单号 车牌号 车架号 发动机号
-        String number = null, plateNumber = null, frame = null, engine = null;
         for (InsurancePolicyResponse.WordsResult wordsResult : wordsResultList) {
             String words = wordsResult.getWords();
             if (number == null) {
@@ -119,24 +129,28 @@ class PolicyDealImpl implements Runnable {
                     build();
             policyRepository.updatePolicy(policy);
         }
+    }
 
+    private void matchOrder() {
         List<DrivingLicense> res = drivingLicenseRepository.getDrivingLicenseByPolicyInfo(DrivingLicense.builder().
                 engine(engine).frame(frame)
                 .plateNumber(plateNumber).build());
         if (res.size() == 0) {
             throw new OCRException();
         }
+
         if (res.size() == 1) {
             Policy policy = Policy.builder().
                     orderId(res.get(0).getOrderId()).
                     build();
             policyRepository.updatePolicy(policy);
         }
+
         if (res.size() >= 2) {
-            for (DrivingLicense temp : res) {
-                List<Policy> tempres = policyRepository.selectPolicyByOrderId(temp.getOrderId());
-                if (tempres.size() == 0) {
-                    Policy policy = Policy.builder().id(policyId).orderId(temp.getOrderId()).build();
+            for (DrivingLicense item : res) {
+                List<Policy> policies = policyRepository.selectPolicyByOrderId(item.getOrderId());
+                if (policies.size() == 0) {
+                    Policy policy = Policy.builder().id(policyId).orderId(item.getOrderId()).build();
                     policyRepository.updatePolicy(policy);
                     break;
                 }
@@ -157,8 +171,13 @@ class PolicyDealImpl implements Runnable {
             createItemInDB();
             putPolicyToOSS();
             doOCR();
+            matchOrder();
         } catch (OCRException e) {
+            logger.warn("OCRException", e);
         } catch (IOException e) {
+            logger.warn("IOException", e);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
         }
     }
 }
