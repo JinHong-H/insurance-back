@@ -6,6 +6,9 @@ import lombok.Data;
 @Data
 @Builder
 public class GetPolicyListItem {
+    private int id;
+    private String name;
+    private String url;
     private String number;
-    private String processType;
+    private int processType;
 }

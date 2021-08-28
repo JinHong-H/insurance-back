@@ -8,9 +8,10 @@ import lombok.experimental.Tolerate;
 @Builder
 public class Policy {
     private int id;
+    private String name;
     private String url;
     private String number;
-    private String processType;
+    private Integer processType;
     private Integer orderId;
 
     @Tolerate

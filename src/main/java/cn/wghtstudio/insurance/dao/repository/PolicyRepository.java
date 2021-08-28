@@ -8,7 +8,7 @@ import java.util.Map;
 
 @Mapper
 public interface PolicyRepository {
-    void createPolicy(Policy policy);
+    void createPolicy(List<Policy> policy);
 
     void updatePolicy(Policy policy);
 

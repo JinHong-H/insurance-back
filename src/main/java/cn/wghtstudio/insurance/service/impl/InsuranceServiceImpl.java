@@ -152,9 +152,12 @@ public class InsuranceServiceImpl implements InsuranceService {
 
         // 处理保单符合返回数据
         List<GetPolicyListItem> getPolicyListItems = res.stream().map((item) -> {
-            GetPolicyListItem.GetPolicyListItemBuilder itemBuilder = GetPolicyListItem.builder();
-            itemBuilder.number(item.getNumber());
-            itemBuilder.processType(item.getProcessType());
+            GetPolicyListItem.GetPolicyListItemBuilder itemBuilder = GetPolicyListItem.builder().
+                    id(item.getId()).
+                    name(item.getName()).
+                    url(item.getUrl()).
+                    number(item.getNumber()).
+                    processType(item.getProcessType());
             return itemBuilder.build();
         }).collect(Collectors.toList());
         builder.items(getPolicyListItems);

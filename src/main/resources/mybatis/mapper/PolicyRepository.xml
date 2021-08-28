@@ -1,10 +1,21 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="cn.wghtstudio.insurance.dao.repository.PolicyRepository">
-    <insert id="createPolicy" parameterType="Policy" useGeneratedKeys="true" keyProperty="id"
+    <resultMap id="policyMap" type="Policy">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="url" column="url"/>
+        <result property="number" column="number"/>
+        <result property="processType" column="process_type"/>
+    </resultMap>
+
+    <insert id="createPolicy" parameterType="List" useGeneratedKeys="true" keyProperty="id"
             keyColumn="id">
-        INSERT INTO policies(url, number, order_id)
-        values (#{url}, #{number}, #{orderId})
+        INSERT INTO policies(name)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.name})
+        </foreach>
     </insert>
 
     <update id="updatePolicy" parameterType="Policy">
@@ -15,6 +26,9 @@
             </if>
             <if test="number != null">
                 number = #{number},
+            </if>
+            <if test="processType != null">
+                process_type = #{processType},
             </if>
             <if test="orderId != null">
                 order_id = #{orderId},
@@ -29,9 +43,10 @@
         where order_id = #{orderID}
     </select>
 
-    <select id="getPolicyList" resultType="Policy">
-        SELECT number, process_type
+    <select id="getPolicyList" resultMap="policyMap">
+        SELECT id, name, url, number, process_type
         FROM policies
+        order by id desc
         <if test="limit != null and offset != null">
             LIMIT #{limit} OFFSET #{offset}
         </if>

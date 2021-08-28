@@ -8,6 +8,8 @@ import cn.wghtstudio.insurance.service.OcrInfoService;
 import cn.wghtstudio.insurance.service.entity.*;
 import cn.wghtstudio.insurance.util.AliyunUtil;
 import cn.wghtstudio.insurance.util.ocr.*;
+import lombok.Builder;
+import lombok.Data;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,13 +27,24 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+@Data
+@Builder
+class PolicyDealParams {
+    private int id;
+    private String name;
+    private byte[] file;
+}
 
 class PolicyDealImpl implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(PolicyDealImpl.class);
 
-    private final String filename;
+    private final Integer policyId;
+
+    private final String OSSPath;
 
     private final byte[] file;
 
@@ -40,8 +53,6 @@ class PolicyDealImpl implements Runnable {
     private final DrivingLicenseRepository drivingLicenseRepository;
 
     private final CertificateRepository certificateRepository;
-
-    private Integer policyId;
 
     private String number = null, plateNumber = null, frame = null, engine = null;
 
@@ -85,19 +96,37 @@ class PolicyDealImpl implements Runnable {
         return null;
     }
 
-    private void createItemInDB() {
-        Policy policy = Policy.builder().
-                url("https://versicherung.oss-cn-beijing.aliyuncs.com/" + filename).
-                build();
-        policyRepository.createPolicy(policy);
-        policyId = policy.getId();
+    private String getPolicyName(String originName) {
+        final String[] splitNames = originName.split("\\.");
+        return splitNames[splitNames.length - 2] + UUID.randomUUID() + ".pdf";
     }
 
     private void putPolicyToOSS() {
-        AliyunUtil.putObject(filename, new ByteArrayInputStream(file));
+        Policy policyBeforePut = Policy.builder().
+                id(policyId).
+                processType(1).
+                build();
+
+        policyRepository.updatePolicy(policyBeforePut);
+
+        AliyunUtil.putObject(OSSPath, new ByteArrayInputStream(file));
+
+        Policy policyAfterPut = Policy.builder().
+                id(policyId).
+                url("https://versicherung.oss-cn-beijing.aliyuncs.com/" + OSSPath).
+                build();
+
+        policyRepository.updatePolicy(policyAfterPut);
     }
 
     private void doOCR() throws IOException, OCRException {
+        Policy policyBeforeOCR = Policy.builder().
+                id(policyId).
+                processType(2).
+                build();
+
+        policyRepository.updatePolicy(policyBeforeOCR);
+
         String b64encoded = Base64.getEncoder().encodeToString(file);
         final String token = GetOcrToken.getAuthToken();
 
@@ -124,13 +153,11 @@ class PolicyDealImpl implements Runnable {
             }
         }
 
-        if (policyId != null) {
-            Policy policy = Policy.builder().
-                    id(policyId).
-                    number(number).
-                    build();
-            policyRepository.updatePolicy(policy);
-        }
+        Policy policy = Policy.builder().
+                id(policyId).
+                number(number).
+                build();
+        policyRepository.updatePolicy(policy);
     }
 
     private void matchOrder() {
@@ -173,9 +200,11 @@ class PolicyDealImpl implements Runnable {
         throw new OCRException();
     }
 
-    public PolicyDealImpl(String filename, byte[] file, PolicyRepository policyRepository, DrivingLicenseRepository drivingLicenseRepository, CertificateRepository certificateRepository) {
-        this.filename = filename;
-        this.file = file;
+    public PolicyDealImpl(PolicyDealParams params, PolicyRepository policyRepository, DrivingLicenseRepository drivingLicenseRepository, CertificateRepository certificateRepository) {
+        this.OSSPath = "policy/" + getPolicyName(params.getName());
+        this.file = params.getFile();
+        this.policyId = params.getId();
+
         this.policyRepository = policyRepository;
         this.drivingLicenseRepository = drivingLicenseRepository;
         this.certificateRepository = certificateRepository;
@@ -184,16 +213,35 @@ class PolicyDealImpl implements Runnable {
     @Override
     public void run() {
         try {
-            createItemInDB();
             putPolicyToOSS();
             doOCR();
             matchOrder();
+            Policy policy = Policy.builder().
+                    id(policyId).
+                    processType(4).
+                    build();
+            policyRepository.updatePolicy(policy);
         } catch (OCRException e) {
             logger.warn("OCRException", e);
+            Policy policy = Policy.builder().
+                    id(policyId).
+                    processType(5).
+                    build();
+            policyRepository.updatePolicy(policy);
         } catch (IOException e) {
             logger.warn("IOException", e);
+            Policy policy = Policy.builder().
+                    id(policyId).
+                    processType(5).
+                    build();
+            policyRepository.updatePolicy(policy);
         } catch (Exception e) {
             logger.warn("Exception", e);
+            Policy policy = Policy.builder().
+                    id(policyId).
+                    processType(5).
+                    build();
+            policyRepository.updatePolicy(policy);
         }
     }
 }
@@ -226,18 +274,12 @@ public class OcrInfoImpl implements OcrInfoService {
             new SynchronousQueue<>()
     );
 
-    private String getPolicyName(String originName) {
-        final String[] splitNames = originName.split("\\.");
-        return splitNames[splitNames.length - 2] + UUID.randomUUID() + ".pdf";
-    }
-
-    private Map<String, byte[]> unzipFile(MultipartFile file) throws IOException {
-        Map<String, byte[]> streamMap = new HashMap<>();
+    private List<PolicyDealParams> unzipFile(MultipartFile file) throws IOException {
+        List<PolicyDealParams> params = new ArrayList<>();
         ZipInputStream zipInputStream = new ZipInputStream(file.getInputStream());
         ZipEntry zipEntry;
 
         while ((zipEntry = zipInputStream.getNextEntry()) != null && !zipEntry.isDirectory()) {
-            String name = "policy/" + getPolicyName(zipEntry.getName());
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
             byte[] bytes = new byte[1024];
@@ -249,12 +291,15 @@ public class OcrInfoImpl implements OcrInfoService {
             byteArrayOutputStream.flush();
             byteArrayOutputStream.close();
             zipInputStream.closeEntry();
-            streamMap.put(name, byteArrayOutputStream.toByteArray());
+            params.add(PolicyDealParams.builder().
+                    name(zipEntry.getName()).
+                    file(byteArrayOutputStream.toByteArray()).
+                    build());
         }
 
         zipInputStream.close();
 
-        return streamMap;
+        return params;
     }
 
     @Override
@@ -379,17 +424,37 @@ public class OcrInfoImpl implements OcrInfoService {
         final String[] splitNames = originName.split("\\.");
         // PDF 直接上传写入数据库
         if (splitNames[splitNames.length - 1].equals("pdf")) {
-            String OSSPath = "policy/" + getPolicyName(originName);
-            executorService.submit(new PolicyDealImpl(OSSPath, file.getBytes(), policyRepository, drivingLicenseRepository, certificateRepository));
+            // 写入数据库 初始化任务
+            List<Policy> policy = List.of(Policy.builder().name(originName).build());
+            policyRepository.createPolicy(policy);
+            PolicyDealParams params = PolicyDealParams.builder().
+                    id(policy.get(0).getId()).
+                    name(originName).
+                    file(file.getBytes()).
+                    build();
+            executorService.submit(new PolicyDealImpl(params, policyRepository, drivingLicenseRepository, certificateRepository));
             return;
         }
 
         // 将文件解压上传 Aliyun 或者直接上传，并写入数据库
         if (splitNames[splitNames.length - 1].equals("zip")) {
-            Map<String, byte[]> streamMap = unzipFile(file);
-            Set<Map.Entry<String, byte[]>> entrySet = streamMap.entrySet();
-            for (Map.Entry<String, byte[]> entry : entrySet) {
-                executorService.submit(new PolicyDealImpl(entry.getKey(), entry.getValue(), policyRepository, drivingLicenseRepository, certificateRepository));
+            // 解压压缩包
+            List<PolicyDealParams> params = unzipFile(file);
+
+            // 写入数据库 初始化任务
+            List<Policy> policies = params.stream().
+                    map((item) -> Policy.builder().name(item.getName()).build()).
+                    collect(Collectors.toList());
+            policyRepository.createPolicy(policies);
+
+            for (int i = 0; i < params.size(); i++) {
+                PolicyDealParams item = params.get(i);
+                item.setId(policies.get(i).getId());
+            }
+
+            // 提交异步任务
+            for (PolicyDealParams item : params) {
+                executorService.submit(new PolicyDealImpl(item, policyRepository, drivingLicenseRepository, certificateRepository));
             }
 
             return;
