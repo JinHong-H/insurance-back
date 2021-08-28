@@ -140,9 +140,17 @@ public class InsuranceServiceImpl implements InsuranceService {
         GetPolicyResponseBody.GetPolicyResponseBodyBuilder builder = GetPolicyResponseBody.builder();
         builder.pageSize((Integer) params.get("limit"));
         builder.current((Integer) params.get("current"));
+
+        // 得到保单总数
         Integer count = policyRepository.getPolicyCount();
-        builder.total(count);
+        if (count != null) {
+            builder.total(count);
+        }
+
+        // 得到保单列表
         List<Policy> res = policyRepository.getPolicyList(params);
+
+        // 处理保单符合返回数据
         List<GetPolicyListItem> getPolicyListItems = res.stream().map((item) -> {
             GetPolicyListItem.GetPolicyListItemBuilder itemBuilder = GetPolicyListItem.builder();
             itemBuilder.number(item.getNumber());
