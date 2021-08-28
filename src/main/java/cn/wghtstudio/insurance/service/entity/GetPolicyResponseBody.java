@@ -3,9 +3,13 @@ package cn.wghtstudio.insurance.service.entity;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class GetPolicyResponseBody {
-    private String number;
-    private String processType;
+    private int total;
+    private int pageSize;
+    private int current;
+    List<GetPolicyListItem> items;
 }

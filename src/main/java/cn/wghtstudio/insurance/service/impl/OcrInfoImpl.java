@@ -134,6 +134,7 @@ class PolicyDealImpl implements Runnable {
     }
 
     private void matchOrder() {
+        // 大小为0 更换方式，大小为1 表示唯一信息 直接进行更新 大于2则表示是投保过一次的车辆，遍历所有orderID，把未使用的值更新
         List<DrivingLicense> drivingLicenseList = drivingLicenseRepository.getDrivingLicenseByPolicyInfo(
                 DrivingLicense.builder().
                         engine(engine).

@@ -6,6 +6,7 @@ import cn.wghtstudio.insurance.dao.repository.*;
 import cn.wghtstudio.insurance.service.InsuranceService;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListItem;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListResponseBody;
+import cn.wghtstudio.insurance.service.entity.GetPolicyListItem;
 import cn.wghtstudio.insurance.service.entity.GetPolicyResponseBody;
 import cn.wghtstudio.insurance.util.LicensePlateWhenNewFactory;
 import cn.wghtstudio.insurance.util.excel.ExcelColumn;
@@ -135,14 +136,22 @@ public class InsuranceServiceImpl implements InsuranceService {
     }
 
     @Override
-    public List<GetPolicyResponseBody> getPolicyList(Map<String, Object> params) {
+    public GetPolicyResponseBody getPolicyList(Map<String, Object> params) {
+        GetPolicyResponseBody.GetPolicyResponseBodyBuilder builder = GetPolicyResponseBody.builder();
+        builder.pageSize((Integer) params.get("limit"));
+        builder.current((Integer) params.get("current"));
+        Integer count = policyRepository.getPolicyCount();
+        builder.total(count);
         List<Policy> res = policyRepository.getPolicyList(params);
-        return res.stream().map((item) -> {
-            GetPolicyResponseBody.GetPolicyResponseBodyBuilder itemBuilder = GetPolicyResponseBody.builder();
+        List<GetPolicyListItem> getPolicyListItems = res.stream().map((item) -> {
+            GetPolicyListItem.GetPolicyListItemBuilder itemBuilder = GetPolicyListItem.builder();
             itemBuilder.number(item.getNumber());
             itemBuilder.processType(item.getProcessType());
             return itemBuilder.build();
         }).collect(Collectors.toList());
+        builder.items(getPolicyListItems);
+
+        return builder.build();
     }
 
     @Override

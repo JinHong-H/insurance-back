@@ -15,4 +15,6 @@ public interface PolicyRepository {
     List<Policy> getPolicyList(Map<String, Object> params);
 
     List<Policy> selectPolicyByOrderId(Integer orderID);
+
+    Integer getPolicyCount();
 }

@@ -116,7 +116,7 @@ public class InsuranceController {
     }
 
     @GetMapping("/policy")
-    public Result<List<GetPolicyResponseBody>> getPolicyList(
+    public Result<GetPolicyResponseBody> getPolicyList(
             @RequestParam(defaultValue = "10", value = "pageSize") Integer pageSize,
             @RequestParam(defaultValue = "1", value = "current") Integer current
     ) {
@@ -129,7 +129,7 @@ public class InsuranceController {
                 }
             };
 
-            List<GetPolicyResponseBody> body = insuranceService.getPolicyList(params);
+            GetPolicyResponseBody body = insuranceService.getPolicyList(params);
             return Result.success(body);
         } catch (Exception e) {
             logger.warn("Exception", e);
