@@ -3,23 +3,21 @@ package cn.wghtstudio.insurance.util.ocr;
 import cn.wghtstudio.insurance.exception.OCRException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
-@Component
 public class OcrInfoGetter {
-    private final OkHttpClient client = new OkHttpClient();
+    private static final OkHttpClient client = new OkHttpClient();
 
-    private HttpUrl getUrl(String base, String token) {
+    private static HttpUrl getUrl(String base, String token) {
         HttpUrl.Builder urlBuilder = Objects.requireNonNull(HttpUrl.parse(base)).
                 newBuilder();
         return urlBuilder.addQueryParameter("access_token", token).build();
     }
 
-    private RequestBody getRequestBody(Map<String, String> params) {
+    private static RequestBody getRequestBody(Map<String, String> params) {
         FormBody.Builder builder = new FormBody.Builder();
 
         for (String key : params.keySet()) {
@@ -29,7 +27,7 @@ public class OcrInfoGetter {
         return builder.build();
     }
 
-    private String execRequest(HttpUrl url, RequestBody requestBody) throws IOException {
+    private static String execRequest(HttpUrl url, RequestBody requestBody) throws IOException {
         final Request request = new Request.Builder().
                 url(url).
                 header("Content-Type", "application/x-www-form-urlencoded").
@@ -41,7 +39,7 @@ public class OcrInfoGetter {
         return Objects.requireNonNull(response.body()).string();
     }
 
-    public IdCardResponse idCard(String imgUrl, String token) throws IOException, OCRException {
+    public static IdCardResponse idCard(String imgUrl, String token) throws IOException, OCRException {
         // 请求url
         final HttpUrl url = getUrl("https://aip.baidubce.com/rest/2.0/ocr/v1/idcard", token);
         RequestBody requestBody = getRequestBody(Map.of("url", imgUrl, "id_card_side", "front"));
@@ -56,7 +54,7 @@ public class OcrInfoGetter {
         return res;
     }
 
-    public BusinessResponse businessLicense(String imgUrl, String token) throws IOException, OCRException {
+    public static BusinessResponse businessLicense(String imgUrl, String token) throws IOException, OCRException {
         // 请求url
         final HttpUrl url = getUrl("https://aip.baidubce.com/rest/2.0/ocr/v1/business_license", token);
         RequestBody requestBody = getRequestBody(Map.of("url", imgUrl));
@@ -71,7 +69,7 @@ public class OcrInfoGetter {
         return res;
     }
 
-    public DrivingLicenseResponse vehicleLicense(String imgUrl, String token) throws IOException, OCRException {
+    public static DrivingLicenseResponse vehicleLicense(String imgUrl, String token) throws IOException, OCRException {
         // 请求url
         final HttpUrl url = getUrl("https://aip.baidubce.com/rest/2.0/ocr/v1/vehicle_license", token);
         RequestBody requestBody = getRequestBody(Map.of("url", imgUrl));
@@ -86,7 +84,7 @@ public class OcrInfoGetter {
         return res;
     }
 
-    public CertificateResponse vehicleCertificate(String imgUrl, String token) throws IOException, OCRException {
+    public static CertificateResponse vehicleCertificate(String imgUrl, String token) throws IOException, OCRException {
         // 请求url
         final HttpUrl url = getUrl("https://aip.baidubce.com/rest/2.0/ocr/v1/vehicle_certificate", token);
         RequestBody requestBody = getRequestBody(Map.of("url", imgUrl));
@@ -94,6 +92,20 @@ public class OcrInfoGetter {
         String response = execRequest(url, requestBody);
         ObjectMapper objectMapper = new ObjectMapper();
         CertificateResponse res = objectMapper.readValue(response, CertificateResponse.class);
+        if (res.getErrorCode() != null) {
+            throw new OCRException();
+        }
+
+        return res;
+    }
+
+    public static InsurancePolicyResponse vehicleInsurance(String pdfFile, String token) throws IOException, OCRException {
+        final HttpUrl url = getUrl("https://aip.baidubce.com/rest/2.0/ocr/v1/accurate_basic", token);
+        RequestBody requestBody = getRequestBody(Map.of("pdf_file", pdfFile));
+
+        String response = execRequest(url, requestBody);
+        ObjectMapper objectMapper = new ObjectMapper();
+        InsurancePolicyResponse res = objectMapper.readValue(response, InsurancePolicyResponse.class);
         if (res.getErrorCode() != null) {
             throw new OCRException();
         }

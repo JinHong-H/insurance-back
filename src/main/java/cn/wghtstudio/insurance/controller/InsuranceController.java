@@ -4,6 +4,7 @@ import cn.wghtstudio.insurance.controller.entity.CreateInsuranceRequestBody;
 import cn.wghtstudio.insurance.dao.entity.User;
 import cn.wghtstudio.insurance.service.InsuranceService;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListResponseBody;
+import cn.wghtstudio.insurance.service.entity.GetPolicyResponseBody;
 import cn.wghtstudio.insurance.util.CurrentUser;
 import cn.wghtstudio.insurance.util.Result;
 import cn.wghtstudio.insurance.util.ResultEnum;
@@ -16,7 +17,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,6 +112,28 @@ public class InsuranceController {
             insuranceService.exportExcel(response, user, params);
         } catch (IOException e) {
             logger.warn("IOException", e);
+        }
+    }
+
+    @GetMapping("/policy")
+    public Result<GetPolicyResponseBody> getPolicyList(
+            @RequestParam(defaultValue = "10", value = "pageSize") Integer pageSize,
+            @RequestParam(defaultValue = "1", value = "current") Integer current
+    ) {
+        try {
+            Map<String, Object> params = new HashMap<>() {
+                {
+                    put("limit", pageSize);
+                    put("current", current);
+                    put("offset", (current - 1) * pageSize);
+                }
+            };
+
+            GetPolicyResponseBody body = insuranceService.getPolicyList(params);
+            return Result.success(body);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+            return Result.error(ResultEnum.DEFAULT_ERROR);
         }
     }
 }

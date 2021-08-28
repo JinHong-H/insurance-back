@@ -2,23 +2,252 @@ package cn.wghtstudio.insurance.service.impl;
 
 import cn.wghtstudio.insurance.dao.entity.*;
 import cn.wghtstudio.insurance.dao.repository.*;
+import cn.wghtstudio.insurance.exception.FileTypeException;
 import cn.wghtstudio.insurance.exception.OCRException;
 import cn.wghtstudio.insurance.service.OcrInfoService;
 import cn.wghtstudio.insurance.service.entity.*;
+import cn.wghtstudio.insurance.util.AliyunUtil;
 import cn.wghtstudio.insurance.util.ocr.*;
+import lombok.Builder;
+import lombok.Data;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+@Data
+@Builder
+class PolicyDealParams {
+    private int id;
+    private String name;
+    private byte[] file;
+}
+
+class PolicyDealImpl implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(PolicyDealImpl.class);
+
+    private final Integer policyId;
+
+    private final String OSSPath;
+
+    private final byte[] file;
+
+    private final PolicyRepository policyRepository;
+
+    private final DrivingLicenseRepository drivingLicenseRepository;
+
+    private final CertificateRepository certificateRepository;
+
+    private String number = null, plateNumber = null, frame = null, engine = null;
+
+    @Nullable
+    private String getInsuranceNumber(String words) {
+        Pattern pattern = Pattern.compile("保险单号\\s?[:：]\\s?([A-Z]{4}[0-9]{18})");
+        Matcher matcher = pattern.matcher(words);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+    @Nullable
+    private String getPlateNumber(String words) {
+        Pattern pattern = Pattern.compile("车牌号\\s?[:：]\\s?([京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼](([A-HJ-Z][A-HJ-NP-Z0-9]{5})|([A-HJ-Z](([DF][A-HJ-NP-Z0-9][0-9]{4})|([0-9]{5}[DF])))|([A-HJ-Z][A-D0-9][0-9]{3}警)))|([0-9]{6}使)|((([沪粤川云桂鄂陕蒙藏黑辽渝]A)|鲁B|闽D|蒙E|蒙H)[0-9]{4}领)|(WJ[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼·•][0-9]{4}[TDSHBXJ0-9])|([VKHBSLJNGCE][A-DJ-PR-TVY][0-9]{5})");
+        Matcher matcher = pattern.matcher(words);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+    @Nullable
+    private String getFrameNumber(String words) {
+        Pattern pattern = Pattern.compile("车架号\\s?[:：]\\s?([A-Z]{3}[A-z0-9]{14})");
+        Matcher matcher = pattern.matcher(words);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+    @Nullable
+    private String getEngineNumber(String words) {
+        Pattern pattern = Pattern.compile("发动机号\\s?[:：]\\s?([A-Z0-9]{6,11})");
+        Matcher matcher = pattern.matcher(words);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+    private String getPolicyName(String originName) {
+        final String[] splitNames = originName.split("\\.");
+        return splitNames[splitNames.length - 2] + UUID.randomUUID() + ".pdf";
+    }
+
+    private void putPolicyToOSS() {
+        Policy policyBeforePut = Policy.builder().
+                id(policyId).
+                processType(1).
+                build();
+
+        policyRepository.updatePolicy(policyBeforePut);
+
+        AliyunUtil.putObject(OSSPath, new ByteArrayInputStream(file));
+
+        Policy policyAfterPut = Policy.builder().
+                id(policyId).
+                url("https://versicherung.oss-cn-beijing.aliyuncs.com/" + OSSPath).
+                build();
+
+        policyRepository.updatePolicy(policyAfterPut);
+    }
+
+    private void doOCR() throws IOException, OCRException {
+        Policy policyBeforeOCR = Policy.builder().
+                id(policyId).
+                processType(2).
+                build();
+
+        policyRepository.updatePolicy(policyBeforeOCR);
+
+        String b64encoded = Base64.getEncoder().encodeToString(file);
+        final String token = GetOcrToken.getAuthToken();
+
+        final InsurancePolicyResponse response = OcrInfoGetter.vehicleInsurance(b64encoded, token);
+        final List<InsurancePolicyResponse.WordsResult> wordsResultList = response.getWordsResult();
+
+        // 从 OCR 结果中提取保险单号 车牌号 车架号 发动机号
+        for (InsurancePolicyResponse.WordsResult wordsResult : wordsResultList) {
+            String words = wordsResult.getWords();
+            if (number == null) {
+                number = getInsuranceNumber(words);
+            }
+
+            if (plateNumber == null) {
+                plateNumber = getPlateNumber(words);
+            }
+
+            if (frame == null) {
+                frame = getFrameNumber(words);
+            }
+
+            if (engine == null) {
+                engine = getEngineNumber(words);
+            }
+        }
+
+        Policy policy = Policy.builder().
+                id(policyId).
+                number(number).
+                build();
+        policyRepository.updatePolicy(policy);
+    }
+
+    private void matchOrder() {
+        // 大小为0 更换方式，大小为1 表示唯一信息 直接进行更新 大于2则表示是投保过一次的车辆，遍历所有orderID，把未使用的值更新
+        List<DrivingLicense> drivingLicenseList = drivingLicenseRepository.getDrivingLicenseByPolicyInfo(
+                DrivingLicense.builder().
+                        engine(engine).
+                        frame(frame).
+                        plateNumber(plateNumber).
+                        build()
+        );
+
+        for (DrivingLicense item : drivingLicenseList) {
+            List<Policy> policies = policyRepository.selectPolicyByOrderId(item.getOrderId());
+            if (policies.size() == 0) {
+                Policy policy = Policy.builder().id(policyId).orderId(item.getOrderId()).build();
+                policyRepository.updatePolicy(policy);
+                return;
+            }
+        }
+
+
+        List<Certificate> certificateList = certificateRepository.getCertificateByPolicyInfo(
+                Certificate.builder().
+                        engine(engine).
+                        frame(frame).
+                        build()
+        );
+
+        for (Certificate item : certificateList) {
+            List<Policy> policies = policyRepository.selectPolicyByOrderId(item.getOrderId());
+            if (policies.size() == 0) {
+                Policy policy = Policy.builder().id(policyId).orderId(item.getOrderId()).build();
+                policyRepository.updatePolicy(policy);
+                return;
+            }
+        }
+
+
+        throw new OCRException();
+    }
+
+    public PolicyDealImpl(PolicyDealParams params, PolicyRepository policyRepository, DrivingLicenseRepository drivingLicenseRepository, CertificateRepository certificateRepository) {
+        this.OSSPath = "policy/" + getPolicyName(params.getName());
+        this.file = params.getFile();
+        this.policyId = params.getId();
+
+        this.policyRepository = policyRepository;
+        this.drivingLicenseRepository = drivingLicenseRepository;
+        this.certificateRepository = certificateRepository;
+    }
+
+    @Override
+    public void run() {
+        try {
+            putPolicyToOSS();
+            doOCR();
+            matchOrder();
+            Policy policy = Policy.builder().
+                    id(policyId).
+                    processType(4).
+                    build();
+            policyRepository.updatePolicy(policy);
+        } catch (OCRException e) {
+            logger.warn("OCRException", e);
+            Policy policy = Policy.builder().
+                    id(policyId).
+                    processType(5).
+                    build();
+            policyRepository.updatePolicy(policy);
+        } catch (IOException e) {
+            logger.warn("IOException", e);
+            Policy policy = Policy.builder().
+                    id(policyId).
+                    processType(5).
+                    build();
+            policyRepository.updatePolicy(policy);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+            Policy policy = Policy.builder().
+                    id(policyId).
+                    processType(5).
+                    build();
+            policyRepository.updatePolicy(policy);
+        }
+    }
+}
 
 @Component
 public class OcrInfoImpl implements OcrInfoService {
-    @Resource
-    private OcrInfoGetter infoGetter;
-
-    @Resource
-    private GetOcrToken getOcrToken;
-
     @Resource
     private IdCardRepository idCardRepository;
 
@@ -32,12 +261,51 @@ public class OcrInfoImpl implements OcrInfoService {
     private CertificateRepository certificateRepository;
 
     @Resource
+    private PolicyRepository policyRepository;
+
+    @Resource
     private OtherFileRepository otherFileRepository;
+
+    private final ExecutorService executorService = new ThreadPoolExecutor(
+            4,
+            10,
+            60L,
+            TimeUnit.SECONDS,
+            new SynchronousQueue<>()
+    );
+
+    private List<PolicyDealParams> unzipFile(MultipartFile file) throws IOException {
+        List<PolicyDealParams> params = new ArrayList<>();
+        ZipInputStream zipInputStream = new ZipInputStream(file.getInputStream());
+        ZipEntry zipEntry;
+
+        while ((zipEntry = zipInputStream.getNextEntry()) != null && !zipEntry.isDirectory()) {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+            byte[] bytes = new byte[1024];
+            int len;
+            while ((len = zipInputStream.read(bytes)) != -1) {
+                byteArrayOutputStream.write(bytes, 0, len);
+            }
+
+            byteArrayOutputStream.flush();
+            byteArrayOutputStream.close();
+            zipInputStream.closeEntry();
+            params.add(PolicyDealParams.builder().
+                    name(zipEntry.getName()).
+                    file(byteArrayOutputStream.toByteArray()).
+                    build());
+        }
+
+        zipInputStream.close();
+
+        return params;
+    }
 
     @Override
     public IdCardResponseBody idCardInfoService(String url) throws IOException, OCRException {
-        final String token = getOcrToken.getAuthToken();
-        final IdCardResponse response = infoGetter.idCard(url, token);
+        final String token = GetOcrToken.getAuthToken();
+        final IdCardResponse response = OcrInfoGetter.idCard(url, token);
 
         final IdCardResponse.WordsResult wordsResult = response.getWordsResult();
         IdCard idCard = IdCard.builder().
@@ -59,8 +327,8 @@ public class OcrInfoImpl implements OcrInfoService {
 
     @Override
     public BusinessLicenseResponseBody businessInfoService(String url) throws IOException, OCRException {
-        final String token = getOcrToken.getAuthToken();
-        final BusinessResponse response = infoGetter.businessLicense(url, token);
+        final String token = GetOcrToken.getAuthToken();
+        final BusinessResponse response = OcrInfoGetter.businessLicense(url, token);
 
         final BusinessResponse.WordsResult wordsResult = response.getWordsResult();
         BusinessLicense businessLicense = BusinessLicense.builder().
@@ -82,8 +350,8 @@ public class OcrInfoImpl implements OcrInfoService {
 
     @Override
     public DrivingLicenseResponseBody drivingInfoService(String url) throws IOException, OCRException {
-        final String token = getOcrToken.getAuthToken();
-        final DrivingLicenseResponse response = infoGetter.vehicleLicense(url, token);
+        final String token = GetOcrToken.getAuthToken();
+        final DrivingLicenseResponse response = OcrInfoGetter.vehicleLicense(url, token);
 
         final DrivingLicenseResponse.WordsResult wordsResult = response.getWordsResult();
         DrivingLicense drivingLicense = DrivingLicense.builder().
@@ -108,8 +376,8 @@ public class OcrInfoImpl implements OcrInfoService {
 
     @Override
     public CertificateResponseBody certificateInfoService(String url) throws IOException, OCRException {
-        final String token = getOcrToken.getAuthToken();
-        final CertificateResponse response = infoGetter.vehicleCertificate(url, token);
+        final String token = GetOcrToken.getAuthToken();
+        final CertificateResponse response = OcrInfoGetter.vehicleCertificate(url, token);
 
         final CertificateResponse.WordsResult wordsResult = response.getWordsResult();
         Certificate certificate = Certificate.builder().
@@ -138,5 +406,60 @@ public class OcrInfoImpl implements OcrInfoService {
         return OtherFileResponseBody.builder().
                 id(otherFile.getId()).
                 build();
+    }
+
+    /**
+     * 将保单任务提交到线程池中执行，经过写入数据库，识别生成投保单三个过程
+     *
+     * @param file 用户上传的文件，只能是 pdf 或者 zip
+     * @throws IOException 文件 IO 异常
+     */
+    @Override
+    public void policyRecordService(MultipartFile file) throws IOException {
+        final String originName = file.getOriginalFilename();
+        if (originName == null) {
+            throw new FileTypeException();
+        }
+
+        final String[] splitNames = originName.split("\\.");
+        // PDF 直接上传写入数据库
+        if (splitNames[splitNames.length - 1].equals("pdf")) {
+            // 写入数据库 初始化任务
+            List<Policy> policy = List.of(Policy.builder().name(originName).build());
+            policyRepository.createPolicy(policy);
+            PolicyDealParams params = PolicyDealParams.builder().
+                    id(policy.get(0).getId()).
+                    name(originName).
+                    file(file.getBytes()).
+                    build();
+            executorService.submit(new PolicyDealImpl(params, policyRepository, drivingLicenseRepository, certificateRepository));
+            return;
+        }
+
+        // 将文件解压上传 Aliyun 或者直接上传，并写入数据库
+        if (splitNames[splitNames.length - 1].equals("zip")) {
+            // 解压压缩包
+            List<PolicyDealParams> params = unzipFile(file);
+
+            // 写入数据库 初始化任务
+            List<Policy> policies = params.stream().
+                    map((item) -> Policy.builder().name(item.getName()).build()).
+                    collect(Collectors.toList());
+            policyRepository.createPolicy(policies);
+
+            for (int i = 0; i < params.size(); i++) {
+                PolicyDealParams item = params.get(i);
+                item.setId(policies.get(i).getId());
+            }
+
+            // 提交异步任务
+            for (PolicyDealParams item : params) {
+                executorService.submit(new PolicyDealImpl(item, policyRepository, drivingLicenseRepository, certificateRepository));
+            }
+
+            return;
+        }
+
+        throw new FileTypeException();
     }
 }

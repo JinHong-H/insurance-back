@@ -6,6 +6,8 @@ import cn.wghtstudio.insurance.dao.repository.*;
 import cn.wghtstudio.insurance.service.InsuranceService;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListItem;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListResponseBody;
+import cn.wghtstudio.insurance.service.entity.GetPolicyListItem;
+import cn.wghtstudio.insurance.service.entity.GetPolicyResponseBody;
 import cn.wghtstudio.insurance.util.LicensePlateWhenNewFactory;
 import cn.wghtstudio.insurance.util.excel.ExcelColumn;
 import cn.wghtstudio.insurance.util.excel.ExcelUtil;
@@ -67,6 +69,9 @@ public class InsuranceServiceImpl implements InsuranceService {
     BusinessLicenseRepository businessLicenseRepository;
 
     @Resource
+    PolicyRepository policyRepository;
+
+    @Resource
     DrivingLicenseRepository drivingLicenseRepository;
 
     @Resource
@@ -126,6 +131,36 @@ public class InsuranceServiceImpl implements InsuranceService {
             return itemBuilder.build();
         }).collect(Collectors.toList());
         builder.items(getInsuranceListItems);
+
+        return builder.build();
+    }
+
+    @Override
+    public GetPolicyResponseBody getPolicyList(Map<String, Object> params) {
+        GetPolicyResponseBody.GetPolicyResponseBodyBuilder builder = GetPolicyResponseBody.builder();
+        builder.pageSize((Integer) params.get("limit"));
+        builder.current((Integer) params.get("current"));
+
+        // 得到保单总数
+        Integer count = policyRepository.getPolicyCount();
+        if (count != null) {
+            builder.total(count);
+        }
+
+        // 得到保单列表
+        List<Policy> res = policyRepository.getPolicyList(params);
+
+        // 处理保单符合返回数据
+        List<GetPolicyListItem> getPolicyListItems = res.stream().map((item) -> {
+            GetPolicyListItem.GetPolicyListItemBuilder itemBuilder = GetPolicyListItem.builder().
+                    id(item.getId()).
+                    name(item.getName()).
+                    url(item.getUrl()).
+                    number(item.getNumber()).
+                    processType(item.getProcessType());
+            return itemBuilder.build();
+        }).collect(Collectors.toList());
+        builder.items(getPolicyListItems);
 
         return builder.build();
     }

@@ -25,10 +25,14 @@ class OcrTokenResponse {
 
 @Component
 public class GetOcrToken {
-    @Resource
-    private OcrConfig ocrConfig;
+    private static OcrConfig ocrConfig;
 
-    private final OkHttpClient client = new OkHttpClient();
+    private static final OkHttpClient client = new OkHttpClient();
+
+    @Resource
+    public void setOcrConfig(OcrConfig config) {
+        ocrConfig = config;
+    }
 
     /**
      * 获取API访问token
@@ -37,7 +41,7 @@ public class GetOcrToken {
      * @return assess_token 示例：
      * "24.460da4889caad24cccdb1fea17221975.2592000.1491995545.282335-1234567"
      */
-    public String getAuthToken() throws IOException {
+    public static String getAuthToken() throws IOException {
         // 官网获取的 API Key 更新为你注册的
         String clientId = ocrConfig.getApiKey();
 
