@@ -11,7 +11,7 @@ public interface PolicyRepository {
     void createPolicy(Policy policy);
 
     void updatePolicy(Policy policy);
-    
+
     List<Policy> getPolicyList(Map<String, Object> params);
 
     List<Policy> selectPolicyByOrderId(Integer orderID);

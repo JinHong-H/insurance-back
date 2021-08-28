@@ -10,6 +10,6 @@ public interface CertificateRepository {
     void createCertificate(Certificate certificate);
 
     void updateCertificate(Certificate certificate);
-    
+
     List<Certificate> getCertificateByPolicyInfo(Certificate certificate);
 }

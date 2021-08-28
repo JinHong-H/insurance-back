@@ -26,10 +26,10 @@ import java.util.Map;
 @RequestMapping(path = "/insurance")
 public class InsuranceController {
     private final Logger logger = LoggerFactory.getLogger(InsuranceController.class);
-    
+
     @Resource
     InsuranceService insuranceService;
-    
+
     @GetMapping
     public Result<GetInsuranceListResponseBody> getInsuranceList(
             @CurrentUser User user,
@@ -48,7 +48,7 @@ public class InsuranceController {
                     put("filterEndTime", filterEndTime);
                 }
             };
-            
+
             GetInsuranceListResponseBody body = insuranceService.getAllList(user, params);
             return Result.success(body);
         } catch (Exception e) {
@@ -56,7 +56,7 @@ public class InsuranceController {
             return Result.error(ResultEnum.DEFAULT_ERROR);
         }
     }
-    
+
     @PostMapping
     public Result<?> createInsurance(@CurrentUser User user, @Valid @RequestBody CreateInsuranceRequestBody req) {
         // 证明材料必须存在其中一项
@@ -66,7 +66,7 @@ public class InsuranceController {
         if (req.getDrivingLicense() == null && req.getCertificate() == null) {
             return Result.error(ResultEnum.ARGUMENT_ERROR);
         }
-        
+
         // 必须传递 ID 字段
         if (req.getIdCard() != null && req.getIdCard().getId() == null) {
             return Result.error(ResultEnum.ARGUMENT_ERROR);
@@ -80,7 +80,7 @@ public class InsuranceController {
         if (req.getCertificate() != null && req.getCertificate().getId() == null) {
             return Result.error(ResultEnum.ARGUMENT_ERROR);
         }
-        
+
         try {
             insuranceService.createNewOrder(user, req);
             return Result.success(null);
@@ -92,7 +92,7 @@ public class InsuranceController {
             return Result.error(ResultEnum.DEFAULT_ERROR);
         }
     }
-    
+
     @GetMapping(path = "/export")
     public void exportExcel(
             HttpServletResponse response,
@@ -114,7 +114,7 @@ public class InsuranceController {
             logger.warn("IOException", e);
         }
     }
-    
+
     @GetMapping("/policy")
     public Result<List<GetPolicyResponseBody>> getPolicyList(
             @RequestParam(defaultValue = "10", value = "pageSize") Integer pageSize,
@@ -128,7 +128,7 @@ public class InsuranceController {
                     put("offset", (current - 1) * pageSize);
                 }
             };
-            
+
             List<GetPolicyResponseBody> body = insuranceService.getPolicyList(params);
             return Result.success(body);
         } catch (Exception e) {
