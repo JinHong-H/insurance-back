@@ -15,7 +15,7 @@ import java.util.Map;
 public interface InsuranceService {
     GetInsuranceListResponseBody getAllList(User user, Map<String, Object> params);
     
-    List<GetPolicyResponseBody> getPolicy(Map<String, Object> params);
+    List<GetPolicyResponseBody> getPolicyList(Map<String, Object> params);
     
     @Transactional
     void createNewOrder(User user, CreateInsuranceRequestBody req) throws ParseException;

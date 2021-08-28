@@ -135,7 +135,7 @@ public class InsuranceServiceImpl implements InsuranceService {
     }
     
     @Override
-    public List<GetPolicyResponseBody> getPolicy(Map<String, Object> params) {
+    public List<GetPolicyResponseBody> getPolicyList(Map<String, Object> params) {
         List<Policy> res = policyRepository.getPolicyList(params);
         return res.stream().map((item) -> {
             GetPolicyResponseBody.GetPolicyResponseBodyBuilder itemBuilder = GetPolicyResponseBody.builder();
