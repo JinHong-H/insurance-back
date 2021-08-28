@@ -10,6 +10,6 @@ public interface PolicyRepository {
     void createPolicy(Policy policy);
 
     void updatePolicy(Policy policy);
-    
-    List<Policy> selectPolicyByorderid(Integer orderID);
+
+    List<Policy> selectPolicyByOrderId(Integer orderID);
 }

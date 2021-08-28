@@ -10,6 +10,6 @@ public interface DrivingLicenseRepository {
     void createDrivingLicense(DrivingLicense drivingLicense);
 
     void updateDrivingLicense(DrivingLicense drivingLicense);
-    
-    List<DrivingLicense> getDrivingLicenseByPolicyinfo(DrivingLicense drivingLicense);
+
+    List<DrivingLicense> getDrivingLicenseByPolicyInfo(DrivingLicense drivingLicense);
 }
