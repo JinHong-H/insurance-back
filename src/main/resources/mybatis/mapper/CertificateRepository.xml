@@ -25,4 +25,17 @@
         </set>
         WHERE id=#{id}
     </update>
+    <select id="getCertificateByPolicyInfo" resultType="Certificate">
+        SELECT engine, frame, order_id
+        FROM certificates
+        <where>
+            <if test="engine != null and engine != ''">
+                or engine = #{engine}
+            </if>
+
+            <if test="frame != null and frame != ''">
+                or　frame = {frame}
+            </if>
+        </where>
+    </select>
 </mapper>

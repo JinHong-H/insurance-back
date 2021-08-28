@@ -28,4 +28,12 @@
         from policies
         where order_id = #{orderID}
     </select>
+
+    <select id="getPolicyList" resultType="Policy">
+        SELECT number, process_type
+        FROM policies
+        <if test="limit != null and offset != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
 </mapper>

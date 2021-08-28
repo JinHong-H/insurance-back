@@ -36,7 +36,7 @@
     </update>
 
     <select id="getDrivingLicenseByPolicyInfo" resultType="DrivingLicense">
-        SELECT url, owner, plate_number, engine, frame, type, order_id
+        SELECT plate_number, engine, frame, order_id
         FROM driving_licenses
         <where>
             <if test="plateNumber != null and plateNumber != ''">
