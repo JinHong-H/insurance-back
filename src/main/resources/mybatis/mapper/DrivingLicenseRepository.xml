@@ -1,6 +1,17 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="cn.wghtstudio.insurance.dao.repository.DrivingLicenseRepository">
+    <resultMap id="drivingMap" type="DrivingLicense">
+        <id property="id" column="id"/>
+        <result property="url" column="url"/>
+        <result property="owner" column="owner"/>
+        <result property="plateNumber" column="plate_number"/>
+        <result property="engine" column="engine"/>
+        <result property="frame" column="frame"/>
+        <result property="type" column="type"/>
+        <result property="orderId" column="order_id"/>
+    </resultMap>
+
     <insert id="createDrivingLicense" parameterType="DrivingLicense" useGeneratedKeys="true" keyProperty="id"
             keyColumn="id">
         INSERT INTO driving_licenses(url, owner, plate_number, engine, frame, type)
@@ -35,7 +46,7 @@
         WHERE id = #{id}
     </update>
 
-    <select id="getDrivingLicenseByPolicyInfo" resultType="DrivingLicense">
+    <select id="getDrivingLicenseByPolicyInfo" resultMap="drivingMap">
         SELECT plate_number, engine, frame, order_id
         FROM driving_licenses
         <where>
@@ -48,7 +59,7 @@
             </if>
 
             <if test="frame != null and frame != ''">
-                or　frame=#{frame}
+                or frame=#{frame}
             </if>
         </where>
     </select>
