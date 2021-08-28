@@ -34,4 +34,21 @@
         </set>
         WHERE id = #{id}
     </update>
+    <select id="getDrivingLicenseByPolicyinfo" resultType="DrivingLicense">
+        SELECT url, owner, plate_number, engine, frame, type, order_id
+        FROM driving_licenses
+        <where>
+            <if test="plateNumber != null and plateNumber != ''">
+                or plate_number=#{plateNumber}
+            </if>
+
+            <if test="engine != null and engine != ''">
+                or engine=#{engine}
+            </if>
+
+            <if test="frame != null and frame != ''">
+                or　frame=#{frame}
+            </if>
+        </where>
+    </select>
 </mapper>

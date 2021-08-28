@@ -22,4 +22,9 @@
         </set>
         WHERE id=#{id}
     </update>
+    <select id="selectPolicyByorderid" resultType="Policy">
+        SELECT id　
+        from policies
+        where order_id = #{orderID}
+    </select>
 </mapper>
