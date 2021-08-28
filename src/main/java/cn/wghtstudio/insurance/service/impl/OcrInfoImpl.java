@@ -159,17 +159,17 @@ class PolicyDealImpl implements Runnable {
         }
         if (!isMatch) {
             List<Certificate> res2 = certificateRepository.getCertificateByPolicyInfo(Certificate.builder().engine(engine).frame(frame).build());
-            if (res.size() == 0) {
+            if (res2.size() == 0) {
                 throw new OCRException();
             }
-            if (res.size() == 1) {
+            if (res2.size() == 1) {
                 Policy policy = Policy.builder().
                         orderId(res2.get(0).getOrderId()).
                         build();
                 policyRepository.updatePolicy(policy);
                 isMatch = true;
             }
-            if (res.size() >= 2) {
+            if (res2.size() >= 2) {
                 for (Certificate item : res2) {
                     List<Policy> policies = policyRepository.selectPolicyByOrderId(item.getOrderId());
                     if (policies.size() == 0) {
