@@ -1,6 +1,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="cn.wghtstudio.insurance.dao.repository.CertificateRepository">
+    <resultMap id="certificateMap" type="Certificate">
+        <id property="id" column="id"/>
+        <result property="url" column="url"/>
+        <result property="engine" column="engine"/>
+        <result property="frame" column="frame"/>
+        <result property="orderId" column="order_id"/>
+    </resultMap>
+
     <insert id="createCertificate" parameterType="Certificate" useGeneratedKeys="true" keyProperty="id"
             keyColumn="id">
         INSERT INTO certificates(url, engine, frame)
@@ -25,4 +33,17 @@
         </set>
         WHERE id=#{id}
     </update>
+    <select id="getCertificateByPolicyInfo" resultMap="certificateMap">
+        SELECT engine, frame, order_id
+        FROM certificates
+        <where>
+            <if test="engine != null and engine != ''">
+                or engine = #{engine}
+            </if>
+
+            <if test="frame != null and frame != ''">
+                or frame = #{frame}
+            </if>
+        </where>
+    </select>
 </mapper>
