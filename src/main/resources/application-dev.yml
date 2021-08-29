@@ -4,9 +4,10 @@ spring:
     username: insurance
     password: crRhSzmJms7dnPbE
     driverClassName: com.mysql.cj.jdbc.Driver
-  data:
-    rest:
-      return-body-on-create:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
 
 mybatis:
   type-aliases-package: cn.wghtstudio.insurance.dao.entity
