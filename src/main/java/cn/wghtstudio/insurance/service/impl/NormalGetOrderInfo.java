@@ -22,6 +22,13 @@ public class NormalGetOrderInfo implements GetOrderInfo {
     }
 
     @Override
+    public Order getOrderDetail(User user, Map<String, Object> params) {
+        params.put("userId", user.getId());
+        List<Order> orders = orderRepository.getOrderByUser(params);
+        return orders.get(0);
+    }
+
+    @Override
     public Integer getALLOrderListCount(User user, Map<String, Object> params) {
         params.put("userId", user.getId());
         return orderRepository.getOrderCount(params);

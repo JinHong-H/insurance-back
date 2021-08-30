@@ -3,11 +3,9 @@ package cn.wghtstudio.insurance.service.impl;
 import cn.wghtstudio.insurance.controller.entity.CreateInsuranceRequestBody;
 import cn.wghtstudio.insurance.dao.entity.*;
 import cn.wghtstudio.insurance.dao.repository.*;
+import cn.wghtstudio.insurance.exception.RecordNotFoundException;
 import cn.wghtstudio.insurance.service.InsuranceService;
-import cn.wghtstudio.insurance.service.entity.GetInsuranceListItem;
-import cn.wghtstudio.insurance.service.entity.GetInsuranceListResponseBody;
-import cn.wghtstudio.insurance.service.entity.GetPolicyListItem;
-import cn.wghtstudio.insurance.service.entity.GetPolicyResponseBody;
+import cn.wghtstudio.insurance.service.entity.*;
 import cn.wghtstudio.insurance.util.LicensePlateWhenNewFactory;
 import cn.wghtstudio.insurance.util.excel.ExcelColumn;
 import cn.wghtstudio.insurance.util.excel.ExcelUtil;
@@ -131,6 +129,71 @@ public class InsuranceServiceImpl implements InsuranceService {
             return itemBuilder.build();
         }).collect(Collectors.toList());
         builder.items(getInsuranceListItems);
+
+        return builder.build();
+    }
+
+    @Override
+    public GetOrderDetailResponseBody getOrderDetail(User user, Map<String, Object> params) throws RecordNotFoundException {
+        // 得到对应用户的实体
+        GetOrderInfo getOrderInfo = GetOrderInfoFactory.getOrderInfo(user.getRole().getValue(), orderRepository);
+        // 得到订单列表
+        Order order = getOrderInfo.getOrderDetail(user, params);
+        if (order == null) {
+            throw new RecordNotFoundException();
+        }
+
+        GetOrderDetailResponseBody.GetOrderDetailResponseBodyBuilder builder = GetOrderDetailResponseBody.builder();
+        builder.id(order.getId()).
+                payType(order.getPayment().getName()).
+                carType(order.getCarType().getName()).
+                startTime(InsuranceServiceImpl.getFormatDate(order.getStartTime()));
+
+        if (order.getIdCard() != null) {
+            final IdCard idCard = order.getIdCard();
+            builder.owner(idCard.getName());
+            builder.idCard(GetOrderDetailResponseBody.IdCard.builder().
+                    url(idCard.getUrl()).
+                    number(idCard.getNumber()).
+                    address(idCard.getAddress()).
+                    build());
+        } else if (order.getBusinessLicense() != null) {
+            final BusinessLicense businessLicense = order.getBusinessLicense();
+            builder.owner(businessLicense.getName());
+            builder.business(GetOrderDetailResponseBody.Business.builder().
+                    url(businessLicense.getUrl()).
+                    number(businessLicense.getNumber()).
+                    address(businessLicense.getAddress()).
+                    build());
+        }
+
+        if (order.getDrivingLicense() != null) {
+            final DrivingLicense drivingLicense = order.getDrivingLicense();
+            builder.licensePlate(drivingLicense.getPlateNumber());
+            builder.driving(GetOrderDetailResponseBody.Driving.builder().
+                    url(drivingLicense.getUrl()).
+                    frame(drivingLicense.getFrame()).
+                    engine(drivingLicense.getEngine()).
+                    type(drivingLicense.getType()).
+                    build());
+        } else if (order.getCertificate() != null) {
+            final Certificate certificate = order.getCertificate();
+            builder.licensePlate(LicensePlateWhenNewFactory.getLicensePlateWhenNew(certificate.getEngine()));
+            builder.certificate(GetOrderDetailResponseBody.Certificate.builder().
+                    url(certificate.getUrl()).
+                    frame(certificate.getFrame()).
+                    engine(certificate.getEngine()).
+                    build());
+        }
+
+        if (order.getPolicy() != null) {
+            final Policy policy = order.getPolicy();
+            builder.policy(GetOrderDetailResponseBody.Policy.builder().
+                    url(policy.getUrl()).
+                    name(policy.getName()).
+                    number(policy.getNumber()).
+                    build());
+        }
 
         return builder.build();
     }

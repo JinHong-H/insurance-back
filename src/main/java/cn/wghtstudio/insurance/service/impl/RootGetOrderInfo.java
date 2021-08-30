@@ -21,6 +21,12 @@ public class RootGetOrderInfo implements GetOrderInfo {
     }
 
     @Override
+    public Order getOrderDetail(User user, Map<String, Object> params) {
+        List<Order> orders = orderRepository.getOrderByUser(params);
+        return orders.get(0);
+    }
+
+    @Override
     public Integer getALLOrderListCount(User user, Map<String, Object> params) {
         return orderRepository.getOrderCount(params);
     }

@@ -10,5 +10,7 @@ import java.util.Map;
 public interface GetOrderInfo {
     List<Order> getALLOrderList(User user, Map<String, Object> params);
 
+    Order getOrderDetail(User user, Map<String, Object> params);
+
     Integer getALLOrderListCount(User user, Map<String, Object> params);
 }
