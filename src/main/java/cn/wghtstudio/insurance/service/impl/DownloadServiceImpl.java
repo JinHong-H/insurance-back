@@ -95,7 +95,7 @@ public class DownloadServiceImpl implements DownloadService {
             if (item.getDrivingLicense() != null) {
                 List<CompressItem> compressItems = folder.get(baseParams.getIdentify());
                 compressItems.add(CompressItem.builder().
-                        name(baseParams.getPlate() + "-驾驶证." + getFix(item.getDrivingLicense().getUrl())).
+                        name(baseParams.getPlate() + "-行驶证." + getFix(item.getDrivingLicense().getUrl())).
                         url(item.getDrivingLicense().getUrl()).
                         build());
             } else if (item.getCertificate() != null) {
