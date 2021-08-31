@@ -1,0 +1,22 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.wghtstudio.insurance.dao.repository.OverInsurancePolicyPicRepository">
+    <resultMap id="OverInsurancePolicyPicMap" type="OverInsurancePolicyPic">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="url" column="url"/>
+        <result property="orderId" column="order_id"/>
+    </resultMap>
+
+    <insert id="createOverInsurancePolicyPic" parameterType="OverInsurancePolicyPic" useGeneratedKeys="true"
+            keyProperty="id" keyColumn="id">
+        INSERT INTO over_insurance_policies_pic (name, order_id, url)
+        VALUES (#{name}, #{orderId}, #{url})
+    </insert>
+
+    <select id="getOverInsurancePolicyPicListByOrderId" resultMap="OverInsurancePolicyPicMap">
+        SELECT *
+        FROM over_insurance_policies_pic
+        WHERE order_id = #{orderId}
+    </select>
+</mapper>

@@ -4,6 +4,8 @@ import cn.wghtstudio.insurance.dao.entity.*;
 import cn.wghtstudio.insurance.dao.repository.*;
 import cn.wghtstudio.insurance.exception.FileTypeException;
 import cn.wghtstudio.insurance.exception.OCRException;
+import cn.wghtstudio.insurance.exception.PdfMakeErrorException;
+import cn.wghtstudio.insurance.exception.SealBuildErrorException;
 import cn.wghtstudio.insurance.service.OcrInfoService;
 import cn.wghtstudio.insurance.service.entity.*;
 import cn.wghtstudio.insurance.util.AliyunUtil;
@@ -17,9 +19,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
@@ -56,11 +60,16 @@ class PolicyDealImpl implements Runnable {
 
     private final OverInsurancePolicyRepository overInsurancePolicyRepository;
 
+    private final OverInsurancePolicyPicRepository overInsurancePolicyPicRepository;
+
     private String number = null, plateNumber = null, frame = null, engine = null;
 
     private Integer orderId = null;
 
-    private final Map<String, String> map = new HashMap<>();
+    private final Map<String, String> dataMap = new HashMap<>();
+
+    private final Map<String, byte[]> imgMap = new HashMap<>();
+
 
     @Nullable
     private String getInsuranceNumber(String words) {
@@ -141,6 +150,11 @@ class PolicyDealImpl implements Runnable {
         return splitNames[splitNames.length - 2] + UUID.randomUUID() + ".pdf";
     }
 
+    private String getOverInsurancePolicyPicBaseName(String originName) {
+        final String[] splitNames = originName.replace("policy/", "").split("\\.");
+        return splitNames[splitNames.length - 2] + UUID.randomUUID();
+    }
+
     private String getPolicyName(String originName) {
         final String[] splitNames = originName.split("\\.");
         return splitNames[splitNames.length - 2] + UUID.randomUUID() + ".pdf";
@@ -174,7 +188,6 @@ class PolicyDealImpl implements Runnable {
 
         String b64encoded = Base64.getEncoder().encodeToString(file);
         final String token = GetOcrToken.getAuthToken();
-
         List<String> name = new ArrayList<>(), company = new ArrayList<>(), time = new ArrayList<>();
 
         final InsurancePolicyResponse response = OcrInfoGetter.vehicleInsurance(b64encoded, token);
@@ -219,27 +232,27 @@ class PolicyDealImpl implements Runnable {
             }
         }
         for (String item : name) {
-            if (!map.containsKey("person1")) {
-                map.put("person1", item);
+            if (!dataMap.containsKey("person1")) {
+                dataMap.put("person1", item);
                 continue;
             }
-            map.put("person2", item);
+            dataMap.put("person2", item);
         }
         for (String item : company) {
-            if (!map.containsKey("person1id")) {
-                map.put("person1id", item);
+            if (!dataMap.containsKey("person1id")) {
+                dataMap.put("person1id", item);
                 continue;
             }
-            map.put("person2id", item);
+            dataMap.put("person2id", item);
         }
         for (String item : time) {
-            if (!map.containsKey("mon1")) {
-                map.put("mon1", item.substring(5, 7));
-                map.put("day1", item.substring(8, 10));
+            if (!dataMap.containsKey("mon1")) {
+                dataMap.put("mon1", item.substring(5, 7));
+                dataMap.put("day1", item.substring(8, 10));
                 continue;
             }
-            map.put("mon2", item.substring(5, 7));
-            map.put("day2", item.substring(8, 10));
+            dataMap.put("mon2", item.substring(5, 7));
+            dataMap.put("day2", item.substring(8, 10));
         }
 
         String allInfos = "";
@@ -255,7 +268,62 @@ class PolicyDealImpl implements Runnable {
             allInfos += "发动机号:" + engine;
         }
 
-        map.put("allinfo", allInfos);
+        dataMap.put("allinfo", allInfos);
+        /*
+          印章配置文件
+         */
+        SealConfiguration configuration = new SealConfiguration();
+        /*
+          主文字
+         */
+        SealFont mainFont = new SealFont();
+        mainFont.setBold(true);
+        mainFont.setFontFamily("宋体");
+        mainFont.setMarginSize(5);
+        mainFont.setFontText(name.get(0));
+        mainFont.setFontSize(20);
+        mainFont.setFontSpace(20.0);
+
+        /*
+          中心文字
+         */
+        SealFont centerFont = new SealFont();
+        centerFont.setBold(true);
+        centerFont.setFontFamily("宋体");
+        centerFont.setFontText("★");
+        centerFont.setFontSize(50);
+        /*
+          添加主文字
+         */
+        configuration.setMainFont(mainFont);
+
+        /*
+          添加中心文字
+         */
+        configuration.setCenterFont(centerFont);
+        /*
+          图片大小
+         */
+        configuration.setImageSize(160);
+        /*
+          背景颜色
+         */
+        configuration.setBackgroudColor(new Color(255, 65, 65, 255));
+        /*
+          边线粗细、半径
+         */
+        configuration.setBorderCircle(new SealCircle(2, 70, 70));
+
+        byte[] sealBytes;
+
+        try {
+            sealBytes = SealUtil.buildBytes(SealUtil.buildSeal(configuration));
+        } catch (Exception e) {
+            throw new SealBuildErrorException();
+        }
+
+        imgMap.put("seal", sealBytes);
+
 
         Policy policy = Policy.builder().
                 id(policyId).
@@ -265,23 +333,48 @@ class PolicyDealImpl implements Runnable {
     }
 
     private void generateOverInsurancePolicy() {
-        if (map.size() < 9) {
+        if (dataMap.size() < 9) {
             throw new OCRException();
         }
-        byte[] data = PdfMake.pdfMadeFromTemplate(map);
+        byte[] data = PdfUtils.pdfMadeFromTemplate(dataMap, imgMap);
         if (data == null) {
-            throw new OCRException();
+            throw new PdfMakeErrorException();
+        }
+
+        List<byte[]> picData;
+        try {
+            picData = PdfUtils.pdfToImage(data);
+        } catch (IOException e) {
+            throw new PdfMakeErrorException();
+        }
+
+        if (picData.size() == 0) {
+            throw new PdfMakeErrorException();
         }
 
         String overInsurancePolicyName = getOverInsurancePolicyName(OSSPath);
 
-        String pathname = "OverInsurancePolicy/" + overInsurancePolicyName;
+        String overInsurancePolicyPathName = "OverInsurancePolicy/" + overInsurancePolicyName;
 
-        AliyunUtil.putObject(pathname, new ByteArrayInputStream(data));
+        AliyunUtil.putObject(overInsurancePolicyPathName, new ByteArrayInputStream(data));
+
+        String overInsurancePolicyPicFileName = getOverInsurancePolicyPicBaseName(OSSPath);
+        String overInsurancePolicyPicPathBaseName = "OverInsurancePolicyPic/" + overInsurancePolicyPicFileName;
+        for (int i = 0; i < picData.size(); i++) {
+            String finalName = overInsurancePolicyPicFileName + i + ".png";
+            String finalPathName = overInsurancePolicyPicPathBaseName + i + ".png";
+            AliyunUtil.putObject(finalPathName, new ByteArrayInputStream(picData.get(i)));
+            OverInsurancePolicyPic overInsurancePolicyPic = OverInsurancePolicyPic.builder().
+                    name(finalName).
+                    url("https://versicherung.oss-cn-beijing.aliyuncs.com/" + finalPathName).
+                    orderId(orderId).
+                    build();
+            overInsurancePolicyPicRepository.createOverInsurancePolicyPic(overInsurancePolicyPic);
+        }
 
         OverInsurancePolicy overInsurancePolicy = OverInsurancePolicy.builder().
                 name(overInsurancePolicyName).
-                url("https://versicherung.oss-cn-beijing.aliyuncs.com/" + pathname).
+                url("https://versicherung.oss-cn-beijing.aliyuncs.com/" + overInsurancePolicyPathName).
                 orderId(orderId).
                 build();
         overInsurancePolicyRepository.createOverInsurancePolicy(overInsurancePolicy);
@@ -329,7 +422,7 @@ class PolicyDealImpl implements Runnable {
         throw new OCRException();
     }
 
-    public PolicyDealImpl(PolicyDealParams params, PolicyRepository policyRepository, DrivingLicenseRepository drivingLicenseRepository, CertificateRepository certificateRepository, OverInsurancePolicyRepository overInsurancePolicyRepository) {
+    public PolicyDealImpl(PolicyDealParams params, PolicyRepository policyRepository, DrivingLicenseRepository drivingLicenseRepository, CertificateRepository certificateRepository, OverInsurancePolicyRepository overInsurancePolicyRepository, OverInsurancePolicyPicRepository overInsurancePolicyPicRepository) {
         this.OSSPath = "policy/" + getPolicyName(params.getName());
         this.file = params.getFile();
         this.policyId = params.getId();
@@ -338,6 +431,7 @@ class PolicyDealImpl implements Runnable {
         this.drivingLicenseRepository = drivingLicenseRepository;
         this.certificateRepository = certificateRepository;
         this.overInsurancePolicyRepository = overInsurancePolicyRepository;
+        this.overInsurancePolicyPicRepository = overInsurancePolicyPicRepository;
     }
 
     @Override
@@ -399,6 +493,9 @@ public class OcrInfoImpl implements OcrInfoService {
 
     @Resource
     private OverInsurancePolicyRepository overInsurancePolicyRepository;
+
+    @Resource
+    private OverInsurancePolicyPicRepository overInsurancePolicyPicRepository;
 
     private final ExecutorService executorService = new ThreadPoolExecutor(
             4,
@@ -566,7 +663,7 @@ public class OcrInfoImpl implements OcrInfoService {
                     name(originName).
                     file(file.getBytes()).
                     build();
-            executorService.submit(new PolicyDealImpl(params, policyRepository, drivingLicenseRepository, certificateRepository, overInsurancePolicyRepository));
+            executorService.submit(new PolicyDealImpl(params, policyRepository, drivingLicenseRepository, certificateRepository, overInsurancePolicyRepository, overInsurancePolicyPicRepository));
             return;
         }
 
@@ -588,7 +685,7 @@ public class OcrInfoImpl implements OcrInfoService {
 
             // 提交异步任务
             for (PolicyDealParams item : params) {
-                executorService.submit(new PolicyDealImpl(item, policyRepository, drivingLicenseRepository, certificateRepository, overInsurancePolicyRepository));
+                executorService.submit(new PolicyDealImpl(item, policyRepository, drivingLicenseRepository, certificateRepository, overInsurancePolicyRepository, overInsurancePolicyPicRepository));
             }
 
             return;
