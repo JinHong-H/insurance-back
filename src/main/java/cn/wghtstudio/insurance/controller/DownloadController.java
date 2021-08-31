@@ -28,4 +28,13 @@ public class DownloadController {
             logger.warn("Exception", e);
         }
     }
+
+    @GetMapping("/policy")
+    public void getPolicyUrl(HttpServletResponse response, @RequestParam List<Integer> ids) {
+        try {
+            downloadService.getPolicyService(response, ids);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+        }
+    }
 }

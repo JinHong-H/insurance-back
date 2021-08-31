@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
@@ -35,6 +33,12 @@ public class DownloadServiceImpl implements DownloadService {
         private String url;
     }
 
+    @Data
+    static class OrderBaseParams {
+        private String identify;
+        private String plate;
+    }
+
     private String getFix(String url) {
         final String[] names = url.split("\\.");
         if (names.length > 0) {
@@ -44,56 +48,60 @@ public class DownloadServiceImpl implements DownloadService {
         }
     }
 
-    private Map<String, List<CompressItem>> getFolder(List<Order> orders) {
+    private OrderBaseParams getOrderBaseParams(Order item) {
+        OrderBaseParams baseParams = new OrderBaseParams();
+
+        if (item.getIdCard() != null) {
+            baseParams.setIdentify(item.getIdCard().getName());
+        } else if (item.getBusinessLicense() != null) {
+            baseParams.setIdentify(item.getBusinessLicense().getName());
+        }
+
+        if (item.getDrivingLicense() != null) {
+            baseParams.setPlate(item.getDrivingLicense().getPlateNumber());
+        } else if (item.getCertificate() != null) {
+            baseParams.setPlate(LicensePlateWhenNewFactory.getLicensePlateWhenNew(item.getCertificate().getEngine()));
+        }
+
+        return baseParams;
+    }
+
+    private Map<String, List<CompressItem>> getEvidenceFolder(List<Order> orders) {
         Map<String, List<CompressItem>> folder = new HashMap<>();
 
         orders.forEach((item) -> {
-            String identify;
-            String plate;
-
-            if (item.getIdCard() != null) {
-                identify = item.getIdCard().getName();
-            } else if (item.getBusinessLicense() != null) {
-                identify = item.getBusinessLicense().getName();
-            } else {
-                return;
-            }
-
-            if (item.getDrivingLicense() != null) {
-                plate = item.getDrivingLicense().getPlateNumber();
-            } else if (item.getCertificate() != null) {
-                plate = LicensePlateWhenNewFactory.getLicensePlateWhenNew(item.getCertificate().getEngine());
-            } else {
+            OrderBaseParams baseParams = getOrderBaseParams(item);
+            if (baseParams.getIdentify() == null || baseParams.getPlate() == null) {
                 return;
             }
 
 
-            folder.computeIfAbsent(identify, k -> new ArrayList<>());
+            folder.computeIfAbsent(baseParams.getIdentify(), k -> new ArrayList<>());
 
             if (item.getIdCard() != null) {
-                List<CompressItem> compressItems = folder.get(identify);
+                List<CompressItem> compressItems = folder.get(baseParams.getIdentify());
                 compressItems.add(CompressItem.builder().
-                        name(plate + "-身份证." + getFix(item.getIdCard().getUrl())).
+                        name(baseParams.getPlate() + "-身份证." + getFix(item.getIdCard().getUrl())).
                         url(item.getIdCard().getUrl()).
                         build());
             } else if (item.getBusinessLicense() != null) {
-                List<CompressItem> compressItems = folder.get(identify);
+                List<CompressItem> compressItems = folder.get(baseParams.getIdentify());
                 compressItems.add(CompressItem.builder().
-                        name(plate + "-印业执照." + getFix(item.getBusinessLicense().getUrl())).
+                        name(baseParams.getPlate() + "-印业执照." + getFix(item.getBusinessLicense().getUrl())).
                         url(item.getBusinessLicense().getUrl()).
                         build());
             }
 
             if (item.getDrivingLicense() != null) {
-                List<CompressItem> compressItems = folder.get(identify);
+                List<CompressItem> compressItems = folder.get(baseParams.getIdentify());
                 compressItems.add(CompressItem.builder().
-                        name(plate + "-驾驶证." + getFix(item.getDrivingLicense().getUrl())).
+                        name(baseParams.getPlate() + "-行驶证." + getFix(item.getDrivingLicense().getUrl())).
                         url(item.getDrivingLicense().getUrl()).
                         build());
             } else if (item.getCertificate() != null) {
-                List<CompressItem> compressItems = folder.get(identify);
+                List<CompressItem> compressItems = folder.get(baseParams.getIdentify());
                 compressItems.add(CompressItem.builder().
-                        name(plate + "-合格证." + getFix(item.getCertificate().getUrl())).
+                        name(baseParams.getPlate() + "-合格证." + getFix(item.getCertificate().getUrl())).
                         url(item.getCertificate().getUrl()).
                         build());
             }
@@ -102,11 +110,31 @@ public class DownloadServiceImpl implements DownloadService {
         return folder;
     }
 
-    @Override
-    public void getEvidenceUrlService(HttpServletResponse response, List<Integer> ids) throws IOException, InterruptedException {
-        List<Order> orders = orderRepository.getOrderByUser(Map.of("ids", ids));
-        Map<String, List<CompressItem>> folder = getFolder(orders);
+    private Map<String, List<CompressItem>> getPolicyFolder(List<Order> orders) {
+        Map<String, List<CompressItem>> folder = new HashMap<>();
 
+        orders.forEach((item) -> {
+            OrderBaseParams baseParams = getOrderBaseParams(item);
+            if (baseParams.getIdentify() == null || baseParams.getPlate() == null) {
+                return;
+            }
+
+
+            folder.computeIfAbsent(baseParams.getIdentify(), k -> new ArrayList<>());
+
+            if (item.getPolicy() != null) {
+                List<CompressItem> compressItems = folder.get(baseParams.getIdentify());
+                compressItems.add(CompressItem.builder().
+                        name(baseParams.getPlate() + "-出保单." + getFix(item.getPolicy().getUrl())).
+                        url(item.getPolicy().getUrl()).
+                        build());
+            }
+        });
+
+        return folder;
+    }
+
+    private void writeFileToResponse(OutputStream outputStream, Map<String, List<CompressItem>> folder) throws InterruptedException, IOException {
         int count = 0;
         for (Map.Entry<String, List<CompressItem>> node : folder.entrySet()) {
             count += node.getValue().size();
@@ -115,12 +143,6 @@ public class DownloadServiceImpl implements DownloadService {
         final Lock lock = new ReentrantLock();
         final CountDownLatch countDownLatch = new CountDownLatch(count);
         final OkHttpClient client = new OkHttpClient();
-
-        response.setContentType("application/zip");
-        response.setHeader("Content-disposition", "attachment;filename=export.zip");
-        response.flushBuffer();
-
-        OutputStream outputStream = response.getOutputStream();
 
         try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
             for (Map.Entry<String, List<CompressItem>> node : folder.entrySet()) {
@@ -151,5 +173,31 @@ public class DownloadServiceImpl implements DownloadService {
             }
             countDownLatch.await();
         }
+    }
+
+    @Override
+    public void getEvidenceUrlService(HttpServletResponse response, List<Integer> ids) throws IOException, InterruptedException {
+        List<Order> orders = orderRepository.getOrderByUser(Map.of("ids", ids));
+        Map<String, List<CompressItem>> folder = getEvidenceFolder(orders);
+
+        response.setContentType("application/zip");
+        response.setHeader("Content-disposition", "attachment;filename=export.zip");
+        response.flushBuffer();
+
+        OutputStream outputStream = response.getOutputStream();
+        writeFileToResponse(outputStream, folder);
+    }
+
+    @Override
+    public void getPolicyService(HttpServletResponse response, List<Integer> ids) throws IOException, InterruptedException {
+        List<Order> orders = orderRepository.getOrderByUser(Map.of("ids", ids));
+        Map<String, List<CompressItem>> folder = getPolicyFolder(orders);
+
+        response.setContentType("application/zip");
+        response.setHeader("Content-disposition", "attachment;filename=export.zip");
+        response.flushBuffer();
+
+        OutputStream outputStream = response.getOutputStream();
+        writeFileToResponse(outputStream, folder);
     }
 }

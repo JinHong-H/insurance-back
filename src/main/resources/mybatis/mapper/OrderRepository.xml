@@ -55,6 +55,7 @@
         <association property="policy" javaType="Policy">
             <id property="id" column="pid"/>
             <result property="url" column="purl"/>
+            <result property="name" column="pname"/>
             <result property="number" column="pnumber"/>
             <result property="orderId" column="poid"/>
         </association>
@@ -67,7 +68,7 @@
         c.id cid, c.url curl, c.engine cengine, c.frame cframe, c.order_id coid,
         dl.id dlid, dl.url dlurl, dl.owner dlowner, dl.plate_number dlpn, dl.engine dlengine, dl.frame dlframe,
         dl.type dltype, dl.order_id dloid,
-        p.id pid, p.url purl, p.number pnumber, p.order_id poid
+        p.id pid, p.url purl, p.name pname, p.number pnumber, p.order_id poid
         FROM orders o
         LEFT JOIN id_cards id ON o.id = id.order_id
         LEFT JOIN business_licenses bl ON o.id = bl.order_id
@@ -92,6 +93,10 @@
                 <foreach collection="ids" item="id" open="(" close=")" separator=",">
                     #{id}
                 </foreach>
+            </if>
+
+            <if test="id != null">
+                and o.id = #{id}
             </if>
         </where>
         ORDER BY o.create_at DESC

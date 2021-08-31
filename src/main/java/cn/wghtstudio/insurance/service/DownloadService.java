@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface DownloadService {
     void getEvidenceUrlService(HttpServletResponse response, List<Integer> ids) throws IOException, InterruptedException;
+
+    void getPolicyService(HttpServletResponse response, List<Integer> ids) throws IOException, InterruptedException;
 }

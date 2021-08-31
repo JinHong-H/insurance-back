@@ -4,6 +4,7 @@ import cn.wghtstudio.insurance.controller.entity.CreateInsuranceRequestBody;
 import cn.wghtstudio.insurance.dao.entity.User;
 import cn.wghtstudio.insurance.service.InsuranceService;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListResponseBody;
+import cn.wghtstudio.insurance.service.entity.GetOrderDetailResponseBody;
 import cn.wghtstudio.insurance.service.entity.GetPolicyResponseBody;
 import cn.wghtstudio.insurance.util.CurrentUser;
 import cn.wghtstudio.insurance.util.Result;
@@ -50,6 +51,22 @@ public class InsuranceController {
             };
 
             GetInsuranceListResponseBody body = insuranceService.getAllList(user, params);
+            return Result.success(body);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+            return Result.error(ResultEnum.DEFAULT_ERROR);
+        }
+    }
+
+    @GetMapping("/detail")
+    public Result<GetOrderDetailResponseBody> getInsuranceDetail(@CurrentUser User user, @RequestParam(value = "id") int id) {
+        Map<String, Object> params = new HashMap<>() {
+            {
+                put("id", id);
+            }
+        };
+        try {
+            GetOrderDetailResponseBody body = insuranceService.getOrderDetail(user, params);
             return Result.success(body);
         } catch (Exception e) {
             logger.warn("Exception", e);
