@@ -18,6 +18,4 @@ public interface OcrInfoService {
     OtherFileResponseBody otherFileService(String url);
 
     void policyRecordService(MultipartFile file) throws IOException, InterruptedException;
-
-//    InsurancepolicyResponseBody insurance(String url) throws IOException, OCRException;
 }

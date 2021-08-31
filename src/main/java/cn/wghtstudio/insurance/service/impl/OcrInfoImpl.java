@@ -54,7 +54,13 @@ class PolicyDealImpl implements Runnable {
 
     private final CertificateRepository certificateRepository;
 
+    private final OverInsurancePolicyRepository overInsurancePolicyRepository;
+
     private String number = null, plateNumber = null, frame = null, engine = null;
+
+    private Integer orderId = null;
+
+    private final Map<String, String> map = new HashMap<>();
 
     @Nullable
     private String getInsuranceNumber(String words) {
@@ -69,6 +75,40 @@ class PolicyDealImpl implements Runnable {
     @Nullable
     private String getPlateNumber(String words) {
         Pattern pattern = Pattern.compile("车牌号\\s?[:：]\\s?([京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼](([A-HJ-Z][A-HJ-NP-Z0-9]{5})|([A-HJ-Z](([DF][A-HJ-NP-Z0-9][0-9]{4})|([0-9]{5}[DF])))|([A-HJ-Z][A-D0-9][0-9]{3}警)))|([0-9]{6}使)|((([沪粤川云桂鄂陕蒙藏黑辽渝]A)|鲁B|闽D|蒙E|蒙H)[0-9]{4}领)|(WJ[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼·•][0-9]{4}[TDSHBXJ0-9])|([VKHBSLJNGCE][A-DJ-PR-TVY][0-9]{5})");
+        Matcher matcher = pattern.matcher(words);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+    @Nullable
+    private String getName(String words) {
+        Pattern pattern = Pattern.compile("(姓名\\s?(/单位名称)?[:：]?)");
+        Matcher matcher = pattern.matcher(words);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+    @Nullable
+    private List<String> getTime(String words) {
+        List<String> result = new ArrayList<>();
+        Pattern pattern = Pattern.compile("\\d{4}年\\d{2}月\\d{2}日");
+        Matcher matcher = pattern.matcher(words);
+        while (matcher.find()) {
+            result.add(matcher.group());
+        }
+        if (result.size() == 0) {
+            return null;
+        }
+        return result;
+    }
+
+    @Nullable
+    private String getCompanyNumber(String words) {
+        Pattern pattern = Pattern.compile("(证件号码(\\s)?[:：]?)");
         Matcher matcher = pattern.matcher(words);
         if (matcher.find()) {
             return matcher.group(1);
@@ -94,6 +134,11 @@ class PolicyDealImpl implements Runnable {
             return matcher.group(1);
         }
         return null;
+    }
+
+    private String getOverInsurancePolicyName(String originName) {
+        final String[] splitNames = originName.replace("policy/", "").split("\\.");
+        return splitNames[splitNames.length - 2] + UUID.randomUUID() + ".pdf";
     }
 
     private String getPolicyName(String originName) {
@@ -130,12 +175,33 @@ class PolicyDealImpl implements Runnable {
         String b64encoded = Base64.getEncoder().encodeToString(file);
         final String token = GetOcrToken.getAuthToken();
 
+        List<String> name = new ArrayList<>(), company = new ArrayList<>(), time = new ArrayList<>();
+
         final InsurancePolicyResponse response = OcrInfoGetter.vehicleInsurance(b64encoded, token);
         final List<InsurancePolicyResponse.WordsResult> wordsResultList = response.getWordsResult();
 
         // 从 OCR 结果中提取保险单号 车牌号 车架号 发动机号
         for (InsurancePolicyResponse.WordsResult wordsResult : wordsResultList) {
             String words = wordsResult.getWords();
+            if (name.size() < 2) {
+                String tmp = getName(words);
+                if (tmp != null) {
+                    name.add(words.replace(tmp, ""));
+                }
+            }
+            if (company.size() < 2) {
+                String tmp = getCompanyNumber(words);
+                if (tmp != null) {
+                    company.add(words.replace(tmp, ""));
+                }
+            }
+            if (time.size() < 2) {
+                List<String> tmp = getTime(words);
+                if (tmp != null) {
+                    time = tmp;
+                }
+            }
+
             if (number == null) {
                 number = getInsuranceNumber(words);
             }
@@ -152,12 +218,73 @@ class PolicyDealImpl implements Runnable {
                 engine = getEngineNumber(words);
             }
         }
+        for (String item : name) {
+            if (!map.containsKey("person1")) {
+                map.put("person1", item);
+                continue;
+            }
+            map.put("person2", item);
+        }
+        for (String item : company) {
+            if (!map.containsKey("person1id")) {
+                map.put("person1id", item);
+                continue;
+            }
+            map.put("person2id", item);
+        }
+        for (String item : time) {
+            if (!map.containsKey("mon1")) {
+                map.put("mon1", item.substring(5, 7));
+                map.put("day1", item.substring(8, 10));
+                continue;
+            }
+            map.put("mon2", item.substring(5, 7));
+            map.put("day2", item.substring(8, 10));
+        }
+
+        String allInfos = "";
+        if (plateNumber != null) {
+            allInfos += "车牌号:" + plateNumber;
+        }
+
+        if (frame != null) {
+            allInfos += "车架号:" + frame;
+        }
+
+        if (engine != null) {
+            allInfos += "发动机号:" + engine;
+        }
+
+        map.put("allinfo", allInfos);
 
         Policy policy = Policy.builder().
                 id(policyId).
                 number(number).
                 build();
         policyRepository.updatePolicy(policy);
+    }
+
+    private void generateOverInsurancePolicy() {
+        if (map.size() < 9) {
+            throw new OCRException();
+        }
+        byte[] data = PdfMake.pdfMadeFromTemplate(map);
+        if (data == null) {
+            throw new OCRException();
+        }
+
+        String overInsurancePolicyName = getOverInsurancePolicyName(OSSPath);
+
+        String pathname = "OverInsurancePolicy/" + overInsurancePolicyName;
+
+        AliyunUtil.putObject(pathname, new ByteArrayInputStream(data));
+
+        OverInsurancePolicy overInsurancePolicy = OverInsurancePolicy.builder().
+                name(overInsurancePolicyName).
+                url("https://versicherung.oss-cn-beijing.aliyuncs.com/" + pathname).
+                orderId(orderId).
+                build();
+        overInsurancePolicyRepository.createOverInsurancePolicy(overInsurancePolicy);
     }
 
     private void matchOrder() {
@@ -174,6 +301,7 @@ class PolicyDealImpl implements Runnable {
             List<Policy> policies = policyRepository.selectPolicyByOrderId(item.getOrderId());
             if (policies.size() == 0) {
                 Policy policy = Policy.builder().id(policyId).orderId(item.getOrderId()).build();
+                orderId = item.getOrderId();
                 policyRepository.updatePolicy(policy);
                 return;
             }
@@ -191,6 +319,7 @@ class PolicyDealImpl implements Runnable {
             List<Policy> policies = policyRepository.selectPolicyByOrderId(item.getOrderId());
             if (policies.size() == 0) {
                 Policy policy = Policy.builder().id(policyId).orderId(item.getOrderId()).build();
+                orderId = item.getOrderId();
                 policyRepository.updatePolicy(policy);
                 return;
             }
@@ -200,7 +329,7 @@ class PolicyDealImpl implements Runnable {
         throw new OCRException();
     }
 
-    public PolicyDealImpl(PolicyDealParams params, PolicyRepository policyRepository, DrivingLicenseRepository drivingLicenseRepository, CertificateRepository certificateRepository) {
+    public PolicyDealImpl(PolicyDealParams params, PolicyRepository policyRepository, DrivingLicenseRepository drivingLicenseRepository, CertificateRepository certificateRepository, OverInsurancePolicyRepository overInsurancePolicyRepository) {
         this.OSSPath = "policy/" + getPolicyName(params.getName());
         this.file = params.getFile();
         this.policyId = params.getId();
@@ -208,6 +337,7 @@ class PolicyDealImpl implements Runnable {
         this.policyRepository = policyRepository;
         this.drivingLicenseRepository = drivingLicenseRepository;
         this.certificateRepository = certificateRepository;
+        this.overInsurancePolicyRepository = overInsurancePolicyRepository;
     }
 
     @Override
@@ -216,6 +346,7 @@ class PolicyDealImpl implements Runnable {
             putPolicyToOSS();
             doOCR();
             matchOrder();
+            generateOverInsurancePolicy();
             Policy policy = Policy.builder().
                     id(policyId).
                     processType(4).
@@ -265,6 +396,9 @@ public class OcrInfoImpl implements OcrInfoService {
 
     @Resource
     private OtherFileRepository otherFileRepository;
+
+    @Resource
+    private OverInsurancePolicyRepository overInsurancePolicyRepository;
 
     private final ExecutorService executorService = new ThreadPoolExecutor(
             4,
@@ -432,7 +566,7 @@ public class OcrInfoImpl implements OcrInfoService {
                     name(originName).
                     file(file.getBytes()).
                     build();
-            executorService.submit(new PolicyDealImpl(params, policyRepository, drivingLicenseRepository, certificateRepository));
+            executorService.submit(new PolicyDealImpl(params, policyRepository, drivingLicenseRepository, certificateRepository, overInsurancePolicyRepository));
             return;
         }
 
@@ -454,7 +588,7 @@ public class OcrInfoImpl implements OcrInfoService {
 
             // 提交异步任务
             for (PolicyDealParams item : params) {
-                executorService.submit(new PolicyDealImpl(item, policyRepository, drivingLicenseRepository, certificateRepository));
+                executorService.submit(new PolicyDealImpl(item, policyRepository, drivingLicenseRepository, certificateRepository, overInsurancePolicyRepository));
             }
 
             return;
