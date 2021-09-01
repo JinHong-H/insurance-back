@@ -1,4 +1,4 @@
-package cn.wghtstudio.insurance.util.ocr;
+package cn.wghtstudio.insurance.util.pdf;
 
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Image;

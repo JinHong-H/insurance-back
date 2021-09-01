@@ -1,4 +1,4 @@
-package cn.wghtstudio.insurance.util.ocr;
+package cn.wghtstudio.insurance.util.pdf;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
