@@ -444,6 +444,7 @@ public abstract class SealUtil {
             } else {
                 transform = AffineTransform.getRotateInstance(Math.PI / 2 - theta + Math.toRadians(8));
             }
+            transform.scale(0.8,1.5);
             Font f2 = f.deriveFont(transform);
             g2d.setFont(f2);
             g2d.drawString(font.getFontText().substring(i, i + 1), (float) (circleRadius + thetaX + INIT_BEGIN),

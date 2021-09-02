@@ -280,10 +280,10 @@ class PolicyDealImpl implements Runnable {
         SealFont mainFont = new SealFont();
         mainFont.setBold(true);
         mainFont.setFontFamily("宋体");
-        mainFont.setMarginSize(5);
+        mainFont.setMarginSize(25);
         mainFont.setFontText(name.get(0));
-        mainFont.setFontSize(20);
-        mainFont.setFontSpace(20.0);
+        mainFont.setFontSize(45);
+        mainFont.setFontSpace(35.0);
 
         /*
           中心文字
@@ -292,7 +292,7 @@ class PolicyDealImpl implements Runnable {
         centerFont.setBold(true);
         centerFont.setFontFamily("宋体");
         centerFont.setFontText("★");
-        centerFont.setFontSize(50);
+        centerFont.setFontSize(75);
         /*
           添加主文字
          */
@@ -305,15 +305,15 @@ class PolicyDealImpl implements Runnable {
         /*
           图片大小
          */
-        configuration.setImageSize(160);
+        configuration.setImageSize(300);
         /*
           背景颜色
          */
-        configuration.setBackgroudColor(new Color(255, 65, 65, 255));
+        configuration.setBackgroudColor(new Color(255, 65, 65, 207));
         /*
           边线粗细、半径
          */
-        configuration.setBorderCircle(new SealCircle(2, 70, 70));
+        configuration.setBorderCircle(new SealCircle(6, 140, 140));
 
         byte[] sealBytes;
 
