@@ -103,10 +103,11 @@ public class PdfMaker {
         initForm();
     }
 
-    public byte[] generate() throws DocumentException, IOException {
+    public byte[] generate(boolean isOfficial) throws DocumentException, IOException {
         fillForm();
-        fillImg();
-
+        if (isOfficial) {
+            fillImg();
+        }
         // 如果为 false, 生成的 PDF 文件可以编辑; 如果为 true, 生成的 PDF 文件不可以编辑
         stamper.setFormFlattening(true);
         stamper.close();
