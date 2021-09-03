@@ -193,7 +193,7 @@ class PolicyDealImpl implements Runnable {
 
         // 主文字
         SealFont mainFont = SealFont.builder().
-                isBold(true).
+                isBold(false).
                 fontFamily("宋体").
                 marginSize(25).
                 fontText(name).
