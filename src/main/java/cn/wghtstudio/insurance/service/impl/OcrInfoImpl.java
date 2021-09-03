@@ -5,12 +5,12 @@ import cn.wghtstudio.insurance.dao.repository.*;
 import cn.wghtstudio.insurance.exception.FileTypeException;
 import cn.wghtstudio.insurance.exception.OCRException;
 import cn.wghtstudio.insurance.exception.PdfMakeErrorException;
-import cn.wghtstudio.insurance.exception.SealBuildErrorException;
 import cn.wghtstudio.insurance.service.OcrInfoService;
 import cn.wghtstudio.insurance.service.entity.*;
 import cn.wghtstudio.insurance.util.AliyunUtil;
 import cn.wghtstudio.insurance.util.ocr.*;
 import cn.wghtstudio.insurance.util.pdf.*;
+import com.itextpdf.text.DocumentException;
 import lombok.Builder;
 import lombok.Data;
 import org.jetbrains.annotations.Nullable;
@@ -93,6 +93,26 @@ class PolicyDealImpl implements Runnable {
     }
 
     @Nullable
+    private String getFrameNumber(String words) {
+        Pattern pattern = Pattern.compile("车架号\\s?[:：]\\s?([A-Z]{3}[A-z0-9]{14})");
+        Matcher matcher = pattern.matcher(words);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+    @Nullable
+    private String getEngineNumber(String words) {
+        Pattern pattern = Pattern.compile("发动机号\\s?[:：]\\s?([A-Z0-9]{6,11})");
+        Matcher matcher = pattern.matcher(words);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+    @Nullable
     private String getName(String words) {
         Pattern pattern = Pattern.compile("(姓名\\s?(/单位名称)?[:：]?)");
         Matcher matcher = pattern.matcher(words);
@@ -126,24 +146,9 @@ class PolicyDealImpl implements Runnable {
         return null;
     }
 
-    @Nullable
-    private String getFrameNumber(String words) {
-        Pattern pattern = Pattern.compile("车架号\\s?[:：]\\s?([A-Z]{3}[A-z0-9]{14})");
-        Matcher matcher = pattern.matcher(words);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-        return null;
-    }
-
-    @Nullable
-    private String getEngineNumber(String words) {
-        Pattern pattern = Pattern.compile("发动机号\\s?[:：]\\s?([A-Z0-9]{6,11})");
-        Matcher matcher = pattern.matcher(words);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-        return null;
+    private String getPolicyName(String originName) {
+        final String[] splitNames = originName.split("\\.");
+        return splitNames[splitNames.length - 2] + UUID.randomUUID() + ".pdf";
     }
 
     private String getOverInsurancePolicyName(String originName) {
@@ -154,11 +159,6 @@ class PolicyDealImpl implements Runnable {
     private String getOverInsurancePolicyPicBaseName(String originName) {
         final String[] splitNames = originName.replace("policy/", "").split("\\.");
         return splitNames[splitNames.length - 2] + UUID.randomUUID();
-    }
-
-    private String getPolicyName(String originName) {
-        final String[] splitNames = originName.split("\\.");
-        return splitNames[splitNames.length - 2] + UUID.randomUUID() + ".pdf";
     }
 
     private void putPolicyToOSS() {
@@ -179,6 +179,45 @@ class PolicyDealImpl implements Runnable {
         policyRepository.updatePolicy(policyAfterPut);
     }
 
+    private void generateSeal(String name) throws IOException {
+        if (name == null) {
+            return;
+        }
+        Seal seal;
+
+        // 主文字
+        SealFont mainFont = SealFont.builder().
+                isBold(true).
+                fontFamily("宋体").
+                marginSize(25).
+                fontText(name).
+                fontSize(45).
+                fontSpace(35.0).
+                build();
+
+        // 中心文字
+        SealFont centerFont = SealFont.builder().
+                isBold(true).
+                fontFamily("宋体").
+                fontText("★").
+                fontSize(75).
+                build();
+
+        // 印章配置文件
+        SealConfiguration configuration = SealConfiguration.builder().
+                mainFont(mainFont).
+                centerFont(centerFont).
+                imageSize(300).
+                backgroundColor(new Color(255, 65, 65, 207)).
+                borderCircle(new SealCircle(6, 140, 140)).
+                build();
+
+        seal = new OfficialSeal(configuration);
+        byte[] sealBytes = seal.draw();
+
+        imgMap.put("seal", sealBytes);
+    }
+
     private void doOCR() throws IOException, OCRException {
         Policy policyBeforeOCR = Policy.builder().
                 id(policyId).
@@ -197,24 +236,6 @@ class PolicyDealImpl implements Runnable {
         // 从 OCR 结果中提取保险单号 车牌号 车架号 发动机号
         for (InsurancePolicyResponse.WordsResult wordsResult : wordsResultList) {
             String words = wordsResult.getWords();
-            if (name.size() < 2) {
-                String tmp = getName(words);
-                if (tmp != null) {
-                    name.add(words.replace(tmp, ""));
-                }
-            }
-            if (company.size() < 2) {
-                String tmp = getCompanyNumber(words);
-                if (tmp != null) {
-                    company.add(words.replace(tmp, ""));
-                }
-            }
-            if (time.size() < 2) {
-                List<String> tmp = getTime(words);
-                if (tmp != null) {
-                    time = tmp;
-                }
-            }
 
             if (number == null) {
                 number = getInsuranceNumber(words);
@@ -231,7 +252,30 @@ class PolicyDealImpl implements Runnable {
             if (engine == null) {
                 engine = getEngineNumber(words);
             }
+
+            if (name.size() < 2) {
+                String tmp = getName(words);
+                if (tmp != null) {
+                    name.add(words.replace(tmp, ""));
+                }
+            }
+
+            if (company.size() < 2) {
+                String tmp = getCompanyNumber(words);
+                if (tmp != null) {
+                    company.add(words.replace(tmp, ""));
+                }
+            }
+
+            if (time.size() < 2) {
+                List<String> tmp = getTime(words);
+                if (tmp != null) {
+                    time = tmp;
+                }
+            }
         }
+
+        // 构建 pdf 填充表单各个字段
         for (String item : name) {
             if (!dataMap.containsKey("person1")) {
                 dataMap.put("person1", item);
@@ -239,6 +283,7 @@ class PolicyDealImpl implements Runnable {
             }
             dataMap.put("person2", item);
         }
+
         for (String item : company) {
             if (!dataMap.containsKey("person1id")) {
                 dataMap.put("person1id", item);
@@ -246,6 +291,7 @@ class PolicyDealImpl implements Runnable {
             }
             dataMap.put("person2id", item);
         }
+
         for (String item : time) {
             if (!dataMap.containsKey("mon1")) {
                 dataMap.put("mon1", item.substring(5, 7));
@@ -270,61 +316,9 @@ class PolicyDealImpl implements Runnable {
         }
 
         dataMap.put("allinfo", allInfos);
-        /*
-          印章配置文件
-         */
-        SealConfiguration configuration = new SealConfiguration();
-        /*
-          主文字
-         */
-        SealFont mainFont = new SealFont();
-        mainFont.setBold(true);
-        mainFont.setFontFamily("宋体");
-        mainFont.setMarginSize(25);
-        mainFont.setFontText(name.get(0));
-        mainFont.setFontSize(45);
-        mainFont.setFontSpace(35.0);
 
-        /*
-          中心文字
-         */
-        SealFont centerFont = new SealFont();
-        centerFont.setBold(true);
-        centerFont.setFontFamily("宋体");
-        centerFont.setFontText("★");
-        centerFont.setFontSize(75);
-        /*
-          添加主文字
-         */
-        configuration.setMainFont(mainFont);
-
-        /*
-          添加中心文字
-         */
-        configuration.setCenterFont(centerFont);
-        /*
-          图片大小
-         */
-        configuration.setImageSize(300);
-        /*
-          背景颜色
-         */
-        configuration.setBackgroudColor(new Color(255, 65, 65, 207));
-        /*
-          边线粗细、半径
-         */
-        configuration.setBorderCircle(new SealCircle(6, 140, 140));
-
-        byte[] sealBytes;
-
-        try {
-            sealBytes = SealUtil.buildBytes(SealUtil.buildSeal(configuration));
-        } catch (Exception e) {
-            throw new SealBuildErrorException();
-        }
-
-        imgMap.put("seal", sealBytes);
-
+        // 生成印章
+        generateSeal(name.get(0));
 
         Policy policy = Policy.builder().
                 id(policyId).
@@ -333,18 +327,78 @@ class PolicyDealImpl implements Runnable {
         policyRepository.updatePolicy(policy);
     }
 
-    private void generateOverInsurancePolicy() {
+    private boolean checkPolicyAndUpdate(Integer orderId) {
+        List<Policy> policies = policyRepository.selectPolicyByOrderId(orderId);
+        if (policies.size() == 0) {
+            Policy policy = Policy.builder().id(policyId).orderId(orderId).build();
+            policyRepository.updatePolicy(policy);
+            return true;
+        }
+        return false;
+    }
+
+    private void matchOrder() {
+        // 大小为0 更换方式，大小为1 表示唯一信息 直接进行更新 大于2则表示是投保过一次的车辆，遍历所有orderID，把未使用的值更新
+        List<DrivingLicense> drivingLicenseList = drivingLicenseRepository.getDrivingLicenseByPolicyInfo(
+                DrivingLicense.builder().
+                        engine(engine).
+                        frame(frame).
+                        plateNumber(plateNumber).
+                        build()
+        );
+
+        for (DrivingLicense item : drivingLicenseList) {
+            if (checkPolicyAndUpdate(item.getOrderId())) {
+                orderId = item.getOrderId();
+                return;
+            }
+        }
+
+
+        List<Certificate> certificateList = certificateRepository.getCertificateByPolicyInfo(
+                Certificate.builder().
+                        engine(engine).
+                        frame(frame).
+                        build()
+        );
+
+        for (Certificate item : certificateList) {
+            if (checkPolicyAndUpdate(item.getOrderId())) {
+                orderId = item.getOrderId();
+                return;
+            }
+        }
+
+
+        throw new OCRException();
+    }
+
+    private void generateOverInsurancePolicy() throws PdfMakeErrorException {
         if (dataMap.size() < 9) {
             throw new OCRException();
         }
-        byte[] data = PdfUtils.pdfMadeFromTemplate(dataMap, imgMap);
-        if (data == null) {
+
+        byte[] data;
+        try {
+            data = new PdfMaker(dataMap, imgMap).generate();
+        } catch (DocumentException | IOException e) {
+            System.out.println(e);
             throw new PdfMakeErrorException();
         }
 
+        String overInsurancePolicyName = getOverInsurancePolicyName(OSSPath);
+        String overInsurancePolicyPathName = "OverInsurancePolicy/" + overInsurancePolicyName;
+        AliyunUtil.putObject(overInsurancePolicyPathName, new ByteArrayInputStream(data));
+        OverInsurancePolicy overInsurancePolicy = OverInsurancePolicy.builder().
+                name(overInsurancePolicyName).
+                url("https://versicherung.oss-cn-beijing.aliyuncs.com/" + overInsurancePolicyPathName).
+                orderId(orderId).
+                build();
+        overInsurancePolicyRepository.createOverInsurancePolicy(overInsurancePolicy);
+
         List<byte[]> picData;
         try {
-            picData = PdfUtils.pdfToImage(data);
+            picData = PdfMaker.pdfToImage(data);
         } catch (IOException e) {
             throw new PdfMakeErrorException();
         }
@@ -352,12 +406,6 @@ class PolicyDealImpl implements Runnable {
         if (picData.size() == 0) {
             throw new PdfMakeErrorException();
         }
-
-        String overInsurancePolicyName = getOverInsurancePolicyName(OSSPath);
-
-        String overInsurancePolicyPathName = "OverInsurancePolicy/" + overInsurancePolicyName;
-
-        AliyunUtil.putObject(overInsurancePolicyPathName, new ByteArrayInputStream(data));
 
         String overInsurancePolicyPicFileName = getOverInsurancePolicyPicBaseName(OSSPath);
         String overInsurancePolicyPicPathBaseName = "OverInsurancePolicyPic/" + overInsurancePolicyPicFileName;
@@ -372,55 +420,6 @@ class PolicyDealImpl implements Runnable {
                     build();
             overInsurancePolicyPicRepository.createOverInsurancePolicyPic(overInsurancePolicyPic);
         }
-
-        OverInsurancePolicy overInsurancePolicy = OverInsurancePolicy.builder().
-                name(overInsurancePolicyName).
-                url("https://versicherung.oss-cn-beijing.aliyuncs.com/" + overInsurancePolicyPathName).
-                orderId(orderId).
-                build();
-        overInsurancePolicyRepository.createOverInsurancePolicy(overInsurancePolicy);
-    }
-
-    private void matchOrder() {
-        // 大小为0 更换方式，大小为1 表示唯一信息 直接进行更新 大于2则表示是投保过一次的车辆，遍历所有orderID，把未使用的值更新
-        List<DrivingLicense> drivingLicenseList = drivingLicenseRepository.getDrivingLicenseByPolicyInfo(
-                DrivingLicense.builder().
-                        engine(engine).
-                        frame(frame).
-                        plateNumber(plateNumber).
-                        build()
-        );
-
-        for (DrivingLicense item : drivingLicenseList) {
-            List<Policy> policies = policyRepository.selectPolicyByOrderId(item.getOrderId());
-            if (policies.size() == 0) {
-                Policy policy = Policy.builder().id(policyId).orderId(item.getOrderId()).build();
-                orderId = item.getOrderId();
-                policyRepository.updatePolicy(policy);
-                return;
-            }
-        }
-
-
-        List<Certificate> certificateList = certificateRepository.getCertificateByPolicyInfo(
-                Certificate.builder().
-                        engine(engine).
-                        frame(frame).
-                        build()
-        );
-
-        for (Certificate item : certificateList) {
-            List<Policy> policies = policyRepository.selectPolicyByOrderId(item.getOrderId());
-            if (policies.size() == 0) {
-                Policy policy = Policy.builder().id(policyId).orderId(item.getOrderId()).build();
-                orderId = item.getOrderId();
-                policyRepository.updatePolicy(policy);
-                return;
-            }
-        }
-
-
-        throw new OCRException();
     }
 
     public PolicyDealImpl(PolicyDealParams params, PolicyRepository policyRepository, DrivingLicenseRepository drivingLicenseRepository, CertificateRepository certificateRepository, OverInsurancePolicyRepository overInsurancePolicyRepository, OverInsurancePolicyPicRepository overInsurancePolicyPicRepository) {
@@ -445,6 +444,13 @@ class PolicyDealImpl implements Runnable {
             Policy policy = Policy.builder().
                     id(policyId).
                     processType(4).
+                    build();
+            policyRepository.updatePolicy(policy);
+        } catch (PdfMakeErrorException e) {
+            logger.warn("PdfMakeErrorException", e);
+            Policy policy = Policy.builder().
+                    id(policyId).
+                    processType(5).
                     build();
             policyRepository.updatePolicy(policy);
         } catch (OCRException e) {
