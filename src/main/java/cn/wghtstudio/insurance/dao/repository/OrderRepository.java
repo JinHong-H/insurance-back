@@ -13,4 +13,6 @@ public interface OrderRepository {
     int getOrderCount(Map<String, Object> params);
 
     void createOrder(Order order);
+
+    Order getOrderById(Order order);
 }
