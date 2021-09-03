@@ -59,6 +59,11 @@
             <result property="number" column="pnumber"/>
             <result property="orderId" column="poid"/>
         </association>
+
+        <association property="user" javaType="User">
+            <id property="id" column="uid"/>
+            <result property="username" column="uusername"/>
+        </association>
     </resultMap>
 
     <select id="getOrderByUser" resultMap="orderMap">
@@ -68,13 +73,15 @@
         c.id cid, c.url curl, c.engine cengine, c.frame cframe, c.order_id coid,
         dl.id dlid, dl.url dlurl, dl.owner dlowner, dl.plate_number dlpn, dl.engine dlengine, dl.frame dlframe,
         dl.type dltype, dl.order_id dloid,
-        p.id pid, p.url purl, p.name pname, p.number pnumber, p.order_id poid
+        p.id pid, p.url purl, p.name pname, p.number pnumber, p.order_id poid,
+        u.id uid, u.username uusername
         FROM orders o
         LEFT JOIN id_cards id ON o.id = id.order_id
         LEFT JOIN business_licenses bl ON o.id = bl.order_id
         LEFT JOIN certificates c ON o.id = c.order_id
         LEFT JOIN driving_licenses dl ON o.id = dl.order_id
         LEFT JOIN policies p on o.id = p.order_id
+        LEFT JOIN users u on o.create_by = u.id
         <where>
             <if test="userId != null and userId != 0">
                 and o.create_by = #{userId}

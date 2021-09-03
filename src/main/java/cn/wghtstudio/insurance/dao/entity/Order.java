@@ -20,6 +20,8 @@ public class Order {
     private Payment payment;
     private CarType carType;
 
+    private User user;
+
     private IdCard idCard;
     private BusinessLicense businessLicense;
     private DrivingLicense drivingLicense;
