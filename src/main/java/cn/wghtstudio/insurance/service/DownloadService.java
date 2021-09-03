@@ -9,5 +9,5 @@ public interface DownloadService {
 
     void getPolicyService(HttpServletResponse response, List<Integer> ids) throws IOException, InterruptedException;
 
-    void getOverInsurancePolicyService(HttpServletResponse response, List<Integer> ids,Integer downloadType) throws IOException, InterruptedException;
+    void getOverInsurancePolicyService(HttpServletResponse response, List<Integer> ids, Integer downloadType) throws IOException, InterruptedException;
 }
