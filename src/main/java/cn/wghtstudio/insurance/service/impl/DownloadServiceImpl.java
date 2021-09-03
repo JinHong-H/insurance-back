@@ -112,46 +112,6 @@ public class DownloadServiceImpl implements DownloadService {
 
     private Map<String, List<CompressItem>> getOverInsurancePolicyFolder(List<Order> orders, Integer downloadType) {
         Map<String, List<CompressItem>> folder = new HashMap<>();
-        if (downloadType == 1) {
-            orders.forEach((item) -> {
-                OrderBaseParams baseParams = getOrderBaseParams(item);
-                if (baseParams.getIdentify() == null || baseParams.getPlate() == null) {
-                    return;
-                }
-
-
-                folder.computeIfAbsent(baseParams.getIdentify(), k -> new ArrayList<>());
-
-                if (item.getPolicy() != null) {
-                    List<CompressItem> compressItems = folder.get(baseParams.getIdentify());
-                    compressItems.add(CompressItem.builder().
-                            name(baseParams.getPlate() + "-投保单." + getFix(item.getOverInsurancePolicy().getName())).
-                            url(item.getOverInsurancePolicy().getUrl()).
-                            build());
-                }
-            });
-            return folder;
-        }
-        if (downloadType == 0) {
-            orders.forEach((item) -> {
-                OrderBaseParams baseParams = getOrderBaseParams(item);
-                if (baseParams.getIdentify() == null || baseParams.getPlate() == null) {
-                    return;
-                }
-
-
-                folder.computeIfAbsent(baseParams.getIdentify(), k -> new ArrayList<>());
-
-                if (item.getPolicy() != null) {
-                    List<CompressItem> compressItems = folder.get(baseParams.getIdentify());
-                    compressItems.add(CompressItem.builder().
-                            name(baseParams.getPlate() + "-投保单." + getFix(item.getOverInsurancePolicyPic().getName())).
-                            url(item.getOverInsurancePolicyPic().getUrl()).
-                            build());
-                }
-            });
-            return folder;
-        }
         orders.forEach((item) -> {
             OrderBaseParams baseParams = getOrderBaseParams(item);
             if (baseParams.getIdentify() == null || baseParams.getPlate() == null) {
@@ -163,14 +123,18 @@ public class DownloadServiceImpl implements DownloadService {
 
             if (item.getPolicy() != null) {
                 List<CompressItem> compressItems = folder.get(baseParams.getIdentify());
-                compressItems.add(CompressItem.builder().
-                        name(baseParams.getPlate() + "-投保单." + getFix(item.getOverInsurancePolicyPic().getName())).
-                        url(item.getOverInsurancePolicyPic().getUrl()).
-                        build());
-                compressItems.add(CompressItem.builder().
-                        name(baseParams.getPlate() + "-投保单." + getFix(item.getOverInsurancePolicy().getName())).
-                        url(item.getOverInsurancePolicy().getUrl()).
-                        build());
+                if (downloadType != 1) {
+                    compressItems.add(CompressItem.builder().
+                            name(baseParams.getPlate() + "-投保单." + getFix(item.getOverInsurancePolicyPic().getName())).
+                            url(item.getOverInsurancePolicyPic().getUrl()).
+                            build());
+                }
+                if (downloadType != 0) {
+                    compressItems.add(CompressItem.builder().
+                            name(baseParams.getPlate() + "-投保单." + getFix(item.getOverInsurancePolicy().getName())).
+                            url(item.getOverInsurancePolicy().getUrl()).
+                            build());
+                }
             }
         });
         return folder;
