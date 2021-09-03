@@ -24,7 +24,7 @@ public class OcrController {
     private OcrInfoService ocrInfoService;
 
     @PostMapping("/idCard")
-    public Result<IdCardResponseBody> getInsuranceInfo(@Valid @RequestBody OcrRequestBody req) {
+    public Result<IdCardResponseBody> getIdCardInfo(@Valid @RequestBody OcrRequestBody req) {
         try {
             IdCardResponseBody res = ocrInfoService.idCardInfoService(req.getImgUrl());
             return Result.success(res);
