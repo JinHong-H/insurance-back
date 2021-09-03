@@ -6,6 +6,7 @@ import cn.wghtstudio.insurance.dao.repository.*;
 import cn.wghtstudio.insurance.exception.RecordNotFoundException;
 import cn.wghtstudio.insurance.service.InsuranceService;
 import cn.wghtstudio.insurance.service.entity.*;
+import cn.wghtstudio.insurance.util.FormatDate;
 import cn.wghtstudio.insurance.util.LicensePlateWhenNewFactory;
 import cn.wghtstudio.insurance.util.excel.ExcelColumn;
 import cn.wghtstudio.insurance.util.excel.ExcelUtil;
@@ -22,7 +23,6 @@ import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -78,11 +78,6 @@ public class InsuranceServiceImpl implements InsuranceService {
     @Resource
     OtherFileRepository otherFileRepository;
 
-    private static String getFormatDate(Date date) {
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        return simpleDateFormat.format(date);
-    }
-
     @Override
     public GetInsuranceListResponseBody getAllList(User user, Map<String, Object> params) {
         GetInsuranceListResponseBody.GetInsuranceListResponseBodyBuilder builder = GetInsuranceListResponseBody.builder();
@@ -98,36 +93,8 @@ public class InsuranceServiceImpl implements InsuranceService {
             builder.total(count);
         }
 
-        // 得到订单列表
-        List<Order> orderList = getOrderInfo.getALLOrderList(user, params);
-
         // 处理订单符合返回数据
-        List<GetInsuranceListItem> getInsuranceListItems = orderList.stream().map((item) -> {
-            GetInsuranceListItem.GetInsuranceListItemBuilder itemBuilder = GetInsuranceListItem.builder();
-            itemBuilder.id(item.getId());
-            itemBuilder.payType(item.getPayment().getName());
-            itemBuilder.carType(item.getCarType().getName());
-
-            itemBuilder.startTime(InsuranceServiceImpl.getFormatDate(item.getStartTime()));
-
-            if (item.getIdCard() != null) {
-                itemBuilder.owner(item.getIdCard().getName());
-            } else if (item.getBusinessLicense() != null) {
-                itemBuilder.owner(item.getBusinessLicense().getName());
-            }
-
-            if (item.getDrivingLicense() != null) {
-                itemBuilder.licensePlate(item.getDrivingLicense().getPlateNumber());
-            } else if (item.getCertificate() != null) {
-                itemBuilder.licensePlate(LicensePlateWhenNewFactory.getLicensePlateWhenNew(item.getCertificate().getEngine()));
-            }
-
-            if (item.getPolicy() != null) {
-                itemBuilder.policy(item.getPolicy().getNumber());
-            }
-
-            return itemBuilder.build();
-        }).collect(Collectors.toList());
+        List<GetInsuranceListItem> getInsuranceListItems = getOrderInfo.processListItem(user, params);
         builder.items(getInsuranceListItems);
 
         return builder.build();
@@ -147,7 +114,7 @@ public class InsuranceServiceImpl implements InsuranceService {
         builder.id(order.getId()).
                 payType(order.getPayment().getName()).
                 carType(order.getCarType().getName()).
-                startTime(InsuranceServiceImpl.getFormatDate(order.getStartTime()));
+                startTime(FormatDate.getFormatDate(order.getStartTime()));
 
         if (order.getIdCard() != null) {
             final IdCard idCard = order.getIdCard();
@@ -306,7 +273,7 @@ public class InsuranceServiceImpl implements InsuranceService {
         orderList.forEach((item) -> {
             ExportColumnItem.ExportColumnItemBuilder builder = ExportColumnItem.builder();
             builder.number(exportColumnItems.size() + 1).
-                    startTime(InsuranceServiceImpl.getFormatDate(item.getStartTime()));
+                    startTime(FormatDate.getFormatDate(item.getStartTime()));
 
             if (item.getIdCard() != null) {
                 IdCard idCard = item.getIdCard();
