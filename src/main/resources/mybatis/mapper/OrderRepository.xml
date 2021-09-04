@@ -1,6 +1,15 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="cn.wghtstudio.insurance.dao.repository.OrderRepository">
+    <resultMap id="orderGetMap" type="order">
+        <id property="id" column="id"/>
+        <result property="createAt" column="create_at"/>
+        <result property="createBy" column="create_by"/>
+        <result property="startTime" column="start_time"/>
+        <result property="fileType" column="file_type"/>
+        <result property="paymentId" column="payment_id"/>
+        <result property="carTypeId" column="car_type_id"/>
+    </resultMap>
     <resultMap id="orderMap" type="Order">
         <id property="id" column="oid"/>
         <result property="createAt" column="create_at"/>
@@ -145,6 +154,15 @@
 
             <if test="filterEndTime != null and filterEndTime != ''">
                 and DATE(create_at) &lt;= #{filterEndTime}
+            </if>
+        </where>
+    </select>
+
+    <select id="getOrderById" resultMap="orderGetMap">
+        select id, create_at, create_by, start_time, file_type, payment_id, car_type_id from orders
+        <where>
+            <if test="id!=null">
+                id=#{id}
             </if>
         </where>
     </select>

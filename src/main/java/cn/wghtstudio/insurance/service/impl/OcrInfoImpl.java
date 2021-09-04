@@ -53,6 +53,8 @@ class PolicyDealImpl implements Runnable {
 
     private final byte[] file;
 
+    private final OrderRepository orderRepository;
+
     private final PolicyRepository policyRepository;
 
     private final DrivingLicenseRepository drivingLicenseRepository;
@@ -70,8 +72,6 @@ class PolicyDealImpl implements Runnable {
     private final Map<String, String> dataMap = new HashMap<>();
 
     private final Map<String, byte[]> imgMap = new HashMap<>();
-
-    private boolean isOfficial = true;
 
 
     @Nullable
@@ -148,8 +148,8 @@ class PolicyDealImpl implements Runnable {
         return null;
     }
 
-    private boolean judgeOfficialMode(String name) {
-        return name.contains("公司");
+    private boolean judgeOfficialMode(int orderId) {
+        return orderRepository.getOrderById(Order.builder().id(orderId).build()).getFileType() > 1;
     }
 
     private String getPolicyName(String originName) {
@@ -193,7 +193,7 @@ class PolicyDealImpl implements Runnable {
 
         // 主文字
         SealFont mainFont = SealFont.builder().
-                isBold(true).
+                isBold(false).
                 fontFamily("宋体").
                 marginSize(25).
                 fontText(name).
@@ -224,7 +224,7 @@ class PolicyDealImpl implements Runnable {
         imgMap.put("seal", sealBytes);
     }
 
-    private void doOCR() throws IOException, OCRException {
+    private void doOCR() throws IOException {
         Policy policyBeforeOCR = Policy.builder().
                 id(policyId).
                 processType(2).
@@ -323,12 +323,6 @@ class PolicyDealImpl implements Runnable {
 
         dataMap.put("allinfo", allInfos);
 
-        // 生成印章
-        isOfficial = judgeOfficialMode(name.get(0));
-        if (isOfficial) {
-            generateSeal(name.get(0));
-        }
-
         Policy policy = Policy.builder().
                 id(policyId).
                 number(number).
@@ -382,9 +376,14 @@ class PolicyDealImpl implements Runnable {
         throw new OCRException();
     }
 
-    private void generateOverInsurancePolicy() throws PdfMakeErrorException {
+    private void generateOverInsurancePolicy() throws IOException, PdfMakeErrorException {
         if (dataMap.size() < 9) {
             throw new OCRException();
+        }
+        // 生成印章
+        boolean isOfficial = judgeOfficialMode(orderId);
+        if (isOfficial) {
+            generateSeal(dataMap.get("person1"));
         }
 
         byte[] data;
@@ -431,7 +430,7 @@ class PolicyDealImpl implements Runnable {
         }
     }
 
-    public PolicyDealImpl(PolicyDealParams params, PolicyRepository policyRepository, DrivingLicenseRepository drivingLicenseRepository, CertificateRepository certificateRepository, OverInsurancePolicyRepository overInsurancePolicyRepository, OverInsurancePolicyPicRepository overInsurancePolicyPicRepository) {
+    public PolicyDealImpl(PolicyDealParams params, PolicyRepository policyRepository, DrivingLicenseRepository drivingLicenseRepository, CertificateRepository certificateRepository, OverInsurancePolicyRepository overInsurancePolicyRepository, OverInsurancePolicyPicRepository overInsurancePolicyPicRepository, OrderRepository orderRepository) {
         this.OSSPath = "policy/" + getPolicyName(params.getName());
         this.file = params.getFile();
         this.policyId = params.getId();
@@ -441,6 +440,7 @@ class PolicyDealImpl implements Runnable {
         this.certificateRepository = certificateRepository;
         this.overInsurancePolicyRepository = overInsurancePolicyRepository;
         this.overInsurancePolicyPicRepository = overInsurancePolicyPicRepository;
+        this.orderRepository = orderRepository;
     }
 
     @Override
@@ -489,6 +489,9 @@ class PolicyDealImpl implements Runnable {
 
 @Component
 public class OcrInfoImpl implements OcrInfoService {
+    @Resource
+    private OrderRepository orderRepository;
+
     @Resource
     private IdCardRepository idCardRepository;
 
@@ -679,7 +682,7 @@ public class OcrInfoImpl implements OcrInfoService {
                     name(originName).
                     file(file.getBytes()).
                     build();
-            executorService.submit(new PolicyDealImpl(params, policyRepository, drivingLicenseRepository, certificateRepository, overInsurancePolicyRepository, overInsurancePolicyPicRepository));
+            executorService.submit(new PolicyDealImpl(params, policyRepository, drivingLicenseRepository, certificateRepository, overInsurancePolicyRepository, overInsurancePolicyPicRepository, orderRepository));
             return;
         }
 
@@ -701,7 +704,7 @@ public class OcrInfoImpl implements OcrInfoService {
 
             // 提交异步任务
             for (PolicyDealParams item : params) {
-                executorService.submit(new PolicyDealImpl(item, policyRepository, drivingLicenseRepository, certificateRepository, overInsurancePolicyRepository, overInsurancePolicyPicRepository));
+                executorService.submit(new PolicyDealImpl(item, policyRepository, drivingLicenseRepository, certificateRepository, overInsurancePolicyRepository, overInsurancePolicyPicRepository, orderRepository));
             }
 
             return;
