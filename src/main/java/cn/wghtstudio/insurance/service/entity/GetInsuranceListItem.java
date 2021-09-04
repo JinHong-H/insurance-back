@@ -13,5 +13,6 @@ public class GetInsuranceListItem {
     private String carType;
     private String payType;
     private String policy;
+    private String overPolicy;
     private String username;
 }

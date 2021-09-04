@@ -110,6 +110,36 @@ public class DownloadServiceImpl implements DownloadService {
         return folder;
     }
 
+    private Map<String, List<CompressItem>> getOverInsurancePolicyFolder(List<Order> orders, Integer downloadType) {
+        Map<String, List<CompressItem>> folder = new HashMap<>();
+        orders.forEach((item) -> {
+            OrderBaseParams baseParams = getOrderBaseParams(item);
+            if (baseParams.getIdentify() == null || baseParams.getPlate() == null) {
+                return;
+            }
+
+
+            folder.computeIfAbsent(baseParams.getIdentify(), k -> new ArrayList<>());
+
+            if (item.getPolicy() != null) {
+                List<CompressItem> compressItems = folder.get(baseParams.getIdentify());
+                if (downloadType != 1) {
+                    compressItems.add(CompressItem.builder().
+                            name(baseParams.getPlate() + "-投保单." + getFix(item.getOverInsurancePolicyPic().getName())).
+                            url(item.getOverInsurancePolicyPic().getUrl()).
+                            build());
+                }
+                if (downloadType != 0) {
+                    compressItems.add(CompressItem.builder().
+                            name(baseParams.getPlate() + "-投保单." + getFix(item.getOverInsurancePolicy().getName())).
+                            url(item.getOverInsurancePolicy().getUrl()).
+                            build());
+                }
+            }
+        });
+        return folder;
+    }
+
     private Map<String, List<CompressItem>> getPolicyFolder(List<Order> orders) {
         Map<String, List<CompressItem>> folder = new HashMap<>();
 
@@ -126,7 +156,7 @@ public class DownloadServiceImpl implements DownloadService {
                 List<CompressItem> compressItems = folder.get(baseParams.getIdentify());
                 compressItems.add(CompressItem.builder().
                         name(baseParams.getPlate() + "-出保单." + getFix(item.getPolicy().getUrl())).
-                        url(item.getPolicy().getUrl()).
+                        url(item.getOverInsurancePolicy().getUrl()).
                         build());
             }
         });
@@ -192,6 +222,19 @@ public class DownloadServiceImpl implements DownloadService {
     public void getPolicyService(HttpServletResponse response, List<Integer> ids) throws IOException, InterruptedException {
         List<Order> orders = orderRepository.getOrderByUser(Map.of("ids", ids));
         Map<String, List<CompressItem>> folder = getPolicyFolder(orders);
+
+        response.setContentType("application/zip");
+        response.setHeader("Content-disposition", "attachment;filename=export.zip");
+        response.flushBuffer();
+
+        OutputStream outputStream = response.getOutputStream();
+        writeFileToResponse(outputStream, folder);
+    }
+
+    @Override
+    public void getOverInsurancePolicyService(HttpServletResponse response, List<Integer> ids, Integer downloadType) throws IOException, InterruptedException {
+        List<Order> orders = orderRepository.getOrderByUser(Map.of("ids", ids));
+        Map<String, List<CompressItem>> folder = getOverInsurancePolicyFolder(orders, downloadType);
 
         response.setContentType("application/zip");
         response.setHeader("Content-disposition", "attachment;filename=export.zip");

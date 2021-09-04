@@ -64,6 +64,20 @@
             <id property="id" column="uid"/>
             <result property="username" column="uusername"/>
         </association>
+
+        <association property="overInsurancePolicy" javaType="OverInsurancePolicy">
+            <id property="id" column="oipid"/>
+            <result property="url" column="oipurl"/>
+            <result property="name" column="oipname"/>
+            <result property="orderId" column="oipoid"/>
+        </association>
+
+        <association property="overInsurancePolicyPic" javaType="OverInsurancePolicyPic">
+            <id property="id" column="oipcid"/>
+            <result property="url" column="oipcurl"/>
+            <result property="name" column="oipcname"/>
+            <result property="orderId" column="oipcoid"/>
+        </association>
     </resultMap>
 
     <select id="getOrderByUser" resultMap="orderMap">
@@ -74,7 +88,10 @@
         dl.id dlid, dl.url dlurl, dl.owner dlowner, dl.plate_number dlpn, dl.engine dlengine, dl.frame dlframe,
         dl.type dltype, dl.order_id dloid,
         p.id pid, p.url purl, p.name pname, p.number pnumber, p.order_id poid,
-        u.id uid, u.username uusername
+        u.id uid, u.username uusername,
+        p.id pid, p.url purl, p.name pname, p.number pnumber, p.order_id poid,
+        oip.id oipid, oip.url oipurl, oip.name oipname, oip.order_id oipoid,
+        oipc.id oipcid, oipc.url oipcurl, oipc.name oipcname, oipc.order_id oipcoid
         FROM orders o
         LEFT JOIN id_cards id ON o.id = id.order_id
         LEFT JOIN business_licenses bl ON o.id = bl.order_id
@@ -82,6 +99,8 @@
         LEFT JOIN driving_licenses dl ON o.id = dl.order_id
         LEFT JOIN policies p on o.id = p.order_id
         LEFT JOIN users u on o.create_by = u.id
+        LEFT JOIN over_insurance_policies oip on o.id = oip.order_id
+        LEFT JOIN over_insurance_policies_pic oipc on o.id = oipc.order_id
         <where>
             <if test="userId != null and userId != 0">
                 and o.create_by = #{userId}

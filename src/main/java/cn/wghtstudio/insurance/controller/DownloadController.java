@@ -37,4 +37,18 @@ public class DownloadController {
             logger.warn("Exception", e);
         }
     }
+
+    /**
+     * 下载投保单
+     *
+     * @param downloadType 下载格式 默认 0--下载png格式  1--下载pdf格式  others--都下载
+     */
+    @GetMapping("/overInsurancePolicy")
+    public void getOverInsurancePolicyUrl(HttpServletResponse response, @RequestParam List<Integer> ids, @RequestParam(defaultValue = "0", name = "downloadType") Integer downloadType) {
+        try {
+            downloadService.getOverInsurancePolicyService(response, ids, downloadType);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+        }
+    }
 }

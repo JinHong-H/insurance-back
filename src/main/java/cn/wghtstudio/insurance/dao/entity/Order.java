@@ -27,6 +27,8 @@ public class Order {
     private DrivingLicense drivingLicense;
     private Certificate certificate;
     private Policy policy;
+    private OverInsurancePolicy overInsurancePolicy;
+    private OverInsurancePolicyPic overInsurancePolicyPic;
 
     @Tolerate
     public Order() {

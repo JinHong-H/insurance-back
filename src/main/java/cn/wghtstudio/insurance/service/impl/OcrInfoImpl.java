@@ -71,6 +71,8 @@ class PolicyDealImpl implements Runnable {
 
     private final Map<String, byte[]> imgMap = new HashMap<>();
 
+    private boolean isOfficial = true;
+
 
     @Nullable
     private String getInsuranceNumber(String words) {
@@ -144,6 +146,10 @@ class PolicyDealImpl implements Runnable {
             return matcher.group(1);
         }
         return null;
+    }
+
+    private boolean judgeOfficialMode(String name) {
+        return name.contains("公司");
     }
 
     private String getPolicyName(String originName) {
@@ -318,7 +324,10 @@ class PolicyDealImpl implements Runnable {
         dataMap.put("allinfo", allInfos);
 
         // 生成印章
-        generateSeal(name.get(0));
+        isOfficial = judgeOfficialMode(name.get(0));
+        if (isOfficial) {
+            generateSeal(name.get(0));
+        }
 
         Policy policy = Policy.builder().
                 id(policyId).
@@ -380,7 +389,7 @@ class PolicyDealImpl implements Runnable {
 
         byte[] data;
         try {
-            data = new PdfMaker(dataMap, imgMap).generate();
+            data = new PdfMaker(dataMap, imgMap).generate(isOfficial);
         } catch (DocumentException | IOException e) {
             System.out.println(e);
             throw new PdfMakeErrorException();

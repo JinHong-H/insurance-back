@@ -8,4 +8,6 @@ public interface DownloadService {
     void getEvidenceUrlService(HttpServletResponse response, List<Integer> ids) throws IOException, InterruptedException;
 
     void getPolicyService(HttpServletResponse response, List<Integer> ids) throws IOException, InterruptedException;
+
+    void getOverInsurancePolicyService(HttpServletResponse response, List<Integer> ids, Integer downloadType) throws IOException, InterruptedException;
 }
