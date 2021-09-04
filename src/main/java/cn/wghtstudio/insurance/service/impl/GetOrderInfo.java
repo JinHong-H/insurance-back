@@ -30,6 +30,10 @@ public abstract class GetOrderInfo {
             itemBuilder.policy(item.getPolicy().getNumber());
         }
 
+        if (item.getOverInsurancePolicy() != null) {
+            itemBuilder.overPolicy(item.getOverInsurancePolicy().getUrl());
+        }
+
         return itemBuilder.build();
     }
 
