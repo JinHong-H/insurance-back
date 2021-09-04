@@ -300,10 +300,12 @@ class PolicyDealImpl implements Runnable {
 
         for (String item : time) {
             if (!dataMap.containsKey("mon1")) {
+                dataMap.put("year1",item.substring(0,4));
                 dataMap.put("mon1", item.substring(5, 7));
                 dataMap.put("day1", item.substring(8, 10));
                 continue;
             }
+            dataMap.put("year2",item.substring(0,4));
             dataMap.put("mon2", item.substring(5, 7));
             dataMap.put("day2", item.substring(8, 10));
         }
@@ -377,7 +379,7 @@ class PolicyDealImpl implements Runnable {
     }
 
     private void generateOverInsurancePolicy() throws IOException, PdfMakeErrorException {
-        if (dataMap.size() < 9) {
+        if (dataMap.size() < 11) {
             throw new OCRException();
         }
         // 生成印章
