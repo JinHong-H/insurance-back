@@ -16,7 +16,7 @@ public abstract class GetOrderInfo {
                 payType(item.getPayment().getName()).
                 carType(item.getCarType().getName()).
                 startTime(FormatDate.getFormatDate(item.getStartTime())).
-                createAt(FormatDate.getFormatDate(item.getCreateAt()));
+                createAt(FormatDate.getFormatDateTime(item.getCreateAt()));
 
         if (item.getIdCard() != null) {
             itemBuilder.owner(item.getIdCard().getName());
