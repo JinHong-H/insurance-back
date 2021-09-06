@@ -37,7 +37,9 @@ public class InsuranceController {
             @RequestParam(defaultValue = "10", value = "pageSize") Integer pageSize,
             @RequestParam(defaultValue = "1", value = "current") Integer current,
             @RequestParam(value = "startTime", required = false) String filterStartTime,
-            @RequestParam(value = "endTime", required = false) String filterEndTime
+            @RequestParam(value = "endTime", required = false) String filterEndTime,
+            @RequestParam(value = "licensePlate", required = false) String licensePlate,
+            @RequestParam(defaultValue = "false", value = "accurate") Boolean accurate
     ) {
         try {
             Map<String, Object> params = new HashMap<>() {
@@ -49,6 +51,10 @@ public class InsuranceController {
                     put("filterEndTime", filterEndTime);
                 }
             };
+
+            if (licensePlate != null) {
+                params.put("licensePlate", accurate ? licensePlate : "%" + licensePlate + "%");
+            }
 
             GetInsuranceListResponseBody body = insuranceService.getAllList(user, params);
             return Result.success(body);
