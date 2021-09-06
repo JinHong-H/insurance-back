@@ -8,11 +8,11 @@ import java.util.Map;
 public interface UserDealService {
     GetUserListResponseBody getUserListService(Map<String, Object> params);
 
-    void addUserService(String username, String password, int roleId) throws UserExistedException;
+    void addUserService(String username, String nickname, String password, int roleId) throws UserExistedException;
 
     void deleteUserService(int id);
 
-    void updateUserService(int id, String password, int roleId);
+    void updateUserService(int id, String nickname, String password, int roleId);
 
     void updateOwnPasswordService(int id, String newpassword);
 }
