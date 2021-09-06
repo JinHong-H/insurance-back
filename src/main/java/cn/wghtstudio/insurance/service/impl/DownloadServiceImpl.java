@@ -1,7 +1,9 @@
 package cn.wghtstudio.insurance.service.impl;
 
 import cn.wghtstudio.insurance.dao.entity.Order;
+import cn.wghtstudio.insurance.dao.entity.OtherFile;
 import cn.wghtstudio.insurance.dao.repository.OrderRepository;
+import cn.wghtstudio.insurance.dao.repository.OtherFileRepository;
 import cn.wghtstudio.insurance.service.DownloadService;
 import cn.wghtstudio.insurance.util.LicensePlateWhenNewFactory;
 import lombok.Builder;
@@ -25,6 +27,9 @@ import java.util.zip.ZipOutputStream;
 public class DownloadServiceImpl implements DownloadService {
     @Resource
     OrderRepository orderRepository;
+
+    @Resource
+    OtherFileRepository otherFileRepository;
 
     @Data
     @Builder
@@ -104,6 +109,19 @@ public class DownloadServiceImpl implements DownloadService {
                         name(baseParams.getPlate() + "-合格证." + getFix(item.getCertificate().getUrl())).
                         url(item.getCertificate().getUrl()).
                         build());
+            }
+
+            List<OtherFile> otherFiles = otherFileRepository.getOtherFilesByOrderId(OtherFile.builder().
+                    orderId(item.getId()).
+                    build());
+            if (otherFiles.size() > 0) {
+                for (int i = 0; i < otherFiles.size(); i++) {
+                    List<CompressItem> compressItems = folder.get(baseParams.getIdentify());
+                    compressItems.add(CompressItem.builder().
+                            name(baseParams.getPlate() + "-其他材料" + i + "." + getFix(otherFiles.get(i).getUrl())).
+                            url(otherFiles.get(i).getUrl()).
+                            build());
+                }
             }
         });
 
