@@ -159,7 +159,7 @@
             </if>
 
             <if test="filterEndTime != null and filterEndTime != ''">
-                and DATEo.(create_at) &lt;= #{filterEndTime}
+                and DATE(o.create_at) &lt;= #{filterEndTime}
             </if>
 
             <if test="ids != null">
