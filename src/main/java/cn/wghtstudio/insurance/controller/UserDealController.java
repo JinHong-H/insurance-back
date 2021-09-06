@@ -53,7 +53,7 @@ public class UserDealController {
     @PostMapping
     public Result<?> AddUser(@Valid @RequestBody UserRequestBody.AddUserRequestBody req) {
         try {
-            userDealService.addUserService(req.getUsername(), req.getPassword(), req.getRoleId());
+            userDealService.addUserService(req.getUsername(), req.getNickname(), req.getPassword(), req.getRoleId());
             return Result.success(null);
         } catch (UserExistedException e) {
             logger.warn("UserExistedException", e);
@@ -67,7 +67,7 @@ public class UserDealController {
     @PutMapping
     public Result<?> UpdateUser(@Valid @RequestBody UserRequestBody.UpdateUserRequestBody req) {
         try {
-            userDealService.updateUserService(req.getId(), req.getPassword(), req.getRoleId());
+            userDealService.updateUserService(req.getId(), req.getNickname(), req.getPassword(), req.getRoleId());
             return Result.success(null);
         } catch (Exception e) {
             logger.warn("Exception", e);

@@ -72,6 +72,7 @@
         <association property="user" javaType="User">
             <id property="id" column="uid"/>
             <result property="username" column="uusername"/>
+            <result property="nickname" column="unickname"/>
         </association>
 
         <association property="overInsurancePolicy" javaType="OverInsurancePolicy">
@@ -87,6 +88,9 @@
             <result property="name" column="oipcname"/>
             <result property="orderId" column="oipcoid"/>
         </association>
+
+        <collection property="otherFileList" column="{orderId=oid}"
+                    select="cn.wghtstudio.insurance.dao.repository.OtherFileRepository.getOtherFilesByOrderId"/>
     </resultMap>
 
     <select id="getOrderByUser" resultMap="orderMap">
@@ -97,8 +101,7 @@
         dl.id dlid, dl.url dlurl, dl.owner dlowner, dl.plate_number dlpn, dl.engine dlengine, dl.frame dlframe,
         dl.type dltype, dl.order_id dloid,
         p.id pid, p.url purl, p.name pname, p.number pnumber, p.order_id poid,
-        u.id uid, u.username uusername,
-        p.id pid, p.url purl, p.name pname, p.number pnumber, p.order_id poid,
+        u.id uid, u.username uusername, u.nickname unickname,
         oip.id oipid, oip.url oipurl, oip.name oipname, oip.order_id oipoid,
         oipc.id oipcid, oipc.url oipcurl, oipc.name oipcname, oipc.order_id oipcoid
         FROM orders o

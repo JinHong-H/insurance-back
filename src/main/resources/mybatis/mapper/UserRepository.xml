@@ -4,6 +4,7 @@
     <resultMap id="userMap" type="User">
         <id property="id" column="id"/>
         <result property="username" column="username"/>
+        <result property="nickname" column="nickname"/>
         <result property="password" column="password"/>
         <result property="roleID" column="role_id"/>
         <association property="role" column="role_id"
@@ -12,19 +13,19 @@
     </resultMap>
 
     <select id="getUserByUsername" resultMap="userMap">
-        SELECT id, username, password, role_id
+        SELECT id, username, nickname, password, role_id
         FROM users
         WHERE username = #{username}
     </select>
 
     <select id="getUserByID" resultMap="userMap">
-        SELECT id, username, password, role_id
+        SELECT id, username, nickname, password, role_id
         FROM users
         WHERE id = #{id}
     </select>
 
     <select id="queryUser" resultMap="userMap">
-        SELECT id, username, password, role_id
+        SELECT id, username, nickname, password, role_id
         FROM users
         <where>
             <if test="username != null and username!= ''">
@@ -54,8 +55,8 @@
     </select>
 
     <insert id="addUser" parameterType="User" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        insert into users (username, password, role_id)
-        VALUES (#{username}, #{password}, #{roleID})
+        insert into users (username, nickname, password, role_id)
+        VALUES (#{username}, #{nickname}, #{password}, #{roleID})
     </insert>
 
     <update id="updateUser" parameterType="User" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
@@ -63,6 +64,10 @@
         <set>
             <if test="username != null and username != ''">
                 username = #{username},
+            </if>
+
+            <if test="nickname != null and nickname != ''">
+                nickname = #{nickname},
             </if>
 
             <if test="password != null and password != ''">

@@ -1,6 +1,12 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="cn.wghtstudio.insurance.dao.repository.OtherFileRepository">
+    <resultMap id="otherFilesMap" type="OtherFile">
+        <id property="id" column="id"/>
+        <result property="url" column="url"/>
+        <result property="orderId" column="order_id"/>
+    </resultMap>
+
     <insert id="createOtherFile" parameterType="OtherFile" useGeneratedKeys="true" keyProperty="id"
             keyColumn="id">
         INSERT INTO other_file(url)
@@ -19,4 +25,16 @@
             #{id}
         </foreach>
     </update>
+
+    <delete id="deleteOtherFiles">
+        DELETE
+        FROM other_file
+        WHERE order_id = #{id}
+    </delete>
+
+    <select id="getOtherFilesByOrderId" resultMap="otherFilesMap">
+        SELECT id, url, order_id
+        FROM other_file
+        where order_id = #{orderId}
+    </select>
 </mapper>

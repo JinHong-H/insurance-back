@@ -31,6 +31,7 @@ public class UserDealImpl implements UserDealService {
                 map((item) -> GetUserListItem.builder().
                         id(item.getId()).
                         username(item.getUsername()).
+                        nickname(item.getNickname()).
                         role(item.getRole().getValue()).
                         build()
                 ).collect(Collectors.toList());
@@ -41,21 +42,21 @@ public class UserDealImpl implements UserDealService {
     }
 
     @Override
-    public void addUserService(String username, String password, int roleId) throws UserExistedException {
+    public void addUserService(String username, String nickname, String password, int roleId) throws UserExistedException {
         User user = userRepository.getUserByUsername(username);
         if (user != null) {
             throw new UserExistedException();
         }
 
         User.UserBuilder builder = User.builder();
-        User createUser = builder.username(username).password(PasswordMD5.getPasswordMD5(password)).roleID(roleId).build();
+        User createUser = builder.username(username).nickname(nickname).password(PasswordMD5.getPasswordMD5(password)).roleID(roleId).build();
         userRepository.addUser(createUser);
     }
 
     @Override
-    public void updateUserService(int id, String password, int roleId) {
+    public void updateUserService(int id, String nickname, String password, int roleId) {
         User.UserBuilder builder = User.builder();
-        User updateUser = builder.id(id).password(PasswordMD5.getPasswordMD5(password)).roleID(roleId).build();
+        User updateUser = builder.id(id).nickname(nickname).password(PasswordMD5.getPasswordMD5(password)).roleID(roleId).build();
         userRepository.updateUser(updateUser);
     }
 

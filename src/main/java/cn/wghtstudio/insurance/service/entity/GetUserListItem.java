@@ -8,5 +8,6 @@ import lombok.Data;
 public class GetUserListItem {
     private int id;
     private String username;
+    private String nickname;
     private int role;
 }

@@ -11,6 +11,8 @@ public class UserRequestBody {
         @NotEmpty
         private String username;
         @NotEmpty
+        private String nickname;
+        @NotEmpty
         private String password;
         @NotNull
         private Integer roleId;
@@ -21,6 +23,7 @@ public class UserRequestBody {
         @NotNull
         private Integer id;
         private String username;
+        private String nickname;
         private String password;
         private Integer roleId;
     }

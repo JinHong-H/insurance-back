@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.experimental.Tolerate;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Builder
@@ -26,6 +27,7 @@ public class Order {
     private BusinessLicense businessLicense;
     private DrivingLicense drivingLicense;
     private Certificate certificate;
+    private List<OtherFile> otherFileList;
     private Policy policy;
     private OverInsurancePolicy overInsurancePolicy;
     private OverInsurancePolicyPic overInsurancePolicyPic;

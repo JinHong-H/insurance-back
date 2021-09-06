@@ -305,6 +305,8 @@ public class InsuranceServiceImpl implements InsuranceService {
             overInsurancePolicyPicRepository.deleteOverInsurancePolicyPic(order.getOverInsurancePolicyPic().getId());
         }
 
+        otherFileRepository.deleteOtherFiles(order.getId());
+
         orderRepository.deleteOrderById(order.getId());
     }
 
