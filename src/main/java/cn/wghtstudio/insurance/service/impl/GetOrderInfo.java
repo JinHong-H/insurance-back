@@ -12,7 +12,11 @@ import java.util.Map;
 
 public abstract class GetOrderInfo {
     static GetInsuranceListItem getGetInsuranceListItem(Order item, GetInsuranceListItem.GetInsuranceListItemBuilder itemBuilder) {
-        itemBuilder.startTime(FormatDate.getFormatDate(item.getStartTime()));
+        itemBuilder.id(item.getId()).
+                payType(item.getPayment().getName()).
+                carType(item.getCarType().getName()).
+                startTime(FormatDate.getFormatDate(item.getStartTime())).
+                createAt(FormatDate.getFormatDate(item.getCreateAt()));
 
         if (item.getIdCard() != null) {
             itemBuilder.owner(item.getIdCard().getName());

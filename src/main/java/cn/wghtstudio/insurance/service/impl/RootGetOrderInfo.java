@@ -30,10 +30,7 @@ public class RootGetOrderInfo extends GetOrderInfo {
 
         return orders.stream().map(item -> {
             GetInsuranceListItem.GetInsuranceListItemBuilder itemBuilder = GetInsuranceListItem.builder();
-            itemBuilder.id(item.getId()).
-                    payType(item.getPayment().getName()).
-                    carType(item.getCarType().getName()).
-                    username(item.getUser().getUsername());
+            itemBuilder.username(item.getUser().getUsername());
 
             return getGetInsuranceListItem(item, itemBuilder);
         }).collect(Collectors.toList());
