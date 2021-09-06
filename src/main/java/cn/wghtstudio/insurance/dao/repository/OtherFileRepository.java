@@ -14,5 +14,5 @@ public interface OtherFileRepository {
 
     void deleteOtherFiles(int id);
 
-    List<OtherFile> getOtherFilesByOrderId(OtherFile otherFile);
+    List<OtherFile> getOtherFilesByOrderId(int orderId);
 }

@@ -111,17 +111,13 @@ public class DownloadServiceImpl implements DownloadService {
                         build());
             }
 
-            List<OtherFile> otherFiles = otherFileRepository.getOtherFilesByOrderId(OtherFile.builder().
-                    orderId(item.getId()).
-                    build());
-            if (otherFiles.size() > 0) {
-                for (int i = 0; i < otherFiles.size(); i++) {
-                    List<CompressItem> compressItems = folder.get(baseParams.getIdentify());
-                    compressItems.add(CompressItem.builder().
-                            name(baseParams.getPlate() + "-其他材料" + i + "." + getFix(otherFiles.get(i).getUrl())).
-                            url(otherFiles.get(i).getUrl()).
-                            build());
-                }
+            List<OtherFile> otherFiles = otherFileRepository.getOtherFilesByOrderId(item.getId());
+            for (int i = 0; i < otherFiles.size(); i++) {
+                List<CompressItem> compressItems = folder.get(baseParams.getIdentify());
+                compressItems.add(CompressItem.builder().
+                        name(baseParams.getPlate() + "-其他材料" + i + "." + getFix(otherFiles.get(i).getUrl())).
+                        url(otherFiles.get(i).getUrl()).
+                        build());
             }
         });
 
