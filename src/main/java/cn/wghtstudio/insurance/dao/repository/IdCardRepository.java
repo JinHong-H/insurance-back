@@ -8,4 +8,6 @@ public interface IdCardRepository {
     void createIdCard(IdCard idCard);
 
     void updateIdCard(IdCard idCard);
+
+    void deleteIdCard(int id);
 }

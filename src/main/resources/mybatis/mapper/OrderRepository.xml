@@ -171,4 +171,10 @@
         insert into orders(create_at, create_by, start_time, file_type, payment_id, car_type_id)
         values (now(), #{createBy}, #{startTime}, 0, #{paymentId}, #{carTypeId})
     </insert>
+
+    <delete id="deleteOrderById">
+        DELETE
+        FROM orders
+        WHERE id = #{id}
+    </delete>
 </mapper>

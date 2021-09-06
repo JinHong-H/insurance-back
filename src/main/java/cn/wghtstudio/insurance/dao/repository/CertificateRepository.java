@@ -12,4 +12,6 @@ public interface CertificateRepository {
     void updateCertificate(Certificate certificate);
 
     List<Certificate> getCertificateByPolicyInfo(Certificate certificate);
+
+    void deleteCertificate(int id);
 }

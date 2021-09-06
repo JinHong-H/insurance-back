@@ -8,4 +8,6 @@ public interface OverInsurancePolicyRepository {
     void createOverInsurancePolicy(OverInsurancePolicy overInsurancePolicy);
 
     OverInsurancePolicy getOverInsurancePolicyByOrderId(OverInsurancePolicy overInsurancePolicy);
+
+    void deleteOverInsurancePolicy(int id);
 }

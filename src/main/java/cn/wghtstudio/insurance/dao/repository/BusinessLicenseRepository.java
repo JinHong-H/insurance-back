@@ -8,4 +8,6 @@ public interface BusinessLicenseRepository {
     void createBusinessLicense(BusinessLicense businessLicense);
 
     void updateBusinessLicense(BusinessLicense businessLicense);
+
+    void deleteBusinessLicense(int id);
 }

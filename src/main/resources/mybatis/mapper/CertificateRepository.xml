@@ -33,6 +33,7 @@
         </set>
         WHERE id=#{id}
     </update>
+
     <select id="getCertificateByPolicyInfo" resultMap="certificateMap">
         SELECT engine, frame, order_id
         FROM certificates
@@ -46,4 +47,10 @@
             </if>
         </where>
     </select>
+
+    <delete id="deleteCertificate">
+        DELETE
+        FROM certificates
+        WHERE id = #{id}
+    </delete>
 </mapper>

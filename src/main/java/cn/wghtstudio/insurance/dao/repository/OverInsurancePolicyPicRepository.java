@@ -10,4 +10,6 @@ public interface OverInsurancePolicyPicRepository {
     void createOverInsurancePolicyPic(OverInsurancePolicyPic overInsurancePolicyPic);
 
     List<OverInsurancePolicyPic> getOverInsurancePolicyPicListByOrderId(OverInsurancePolicyPic overInsurancePolicyPic);
+
+    void deleteOverInsurancePolicyPic(int id);
 }

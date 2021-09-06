@@ -63,4 +63,10 @@
             </if>
         </where>
     </select>
+
+    <delete id="deleteDrivingLicense">
+        DELETE
+        FROM driving_licenses
+        WHERE id = #{id}
+    </delete>
 </mapper>

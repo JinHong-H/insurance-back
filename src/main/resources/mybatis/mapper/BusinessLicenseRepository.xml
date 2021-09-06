@@ -28,4 +28,10 @@
         </set>
         WHERE id=#{id}
     </update>
+
+    <delete id="deleteBusinessLicense">
+        DELETE
+        FROM business_licenses
+        WHERE id = #{id}
+    </delete>
 </mapper>

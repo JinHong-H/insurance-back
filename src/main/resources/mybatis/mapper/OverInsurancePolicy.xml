@@ -19,4 +19,10 @@
         FROM over_insurance_policies
         WHERE order_id = #{orderId}
     </select>
+
+    <delete id="deleteOverInsurancePolicy">
+        DELETE
+        FROM over_insurance_policies
+        WHERE id = #{id}
+    </delete>
 </mapper>

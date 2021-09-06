@@ -110,6 +110,22 @@ public class InsuranceController {
         }
     }
 
+    @DeleteMapping
+    public Result<?> deleteInsurance(@CurrentUser User user, @RequestParam(value = "id") int id) {
+        Map<String, Object> params = new HashMap<>() {
+            {
+                put("id", id);
+            }
+        };
+        try {
+            insuranceService.deleteOrder(user, params);
+            return Result.success(null);
+        } catch (Exception e) {
+            logger.warn("Exception", e);
+            return Result.error(ResultEnum.DEFAULT_ERROR);
+        }
+    }
+
     @GetMapping(path = "/export")
     public void exportExcel(
             HttpServletResponse response,

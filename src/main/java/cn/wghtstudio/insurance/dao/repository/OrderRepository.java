@@ -15,4 +15,6 @@ public interface OrderRepository {
     void createOrder(Order order);
 
     Order getOrderById(Order order);
+
+    void deleteOrderById(int id);
 }

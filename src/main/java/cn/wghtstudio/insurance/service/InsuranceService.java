@@ -23,5 +23,8 @@ public interface InsuranceService {
     @Transactional
     void createNewOrder(User user, CreateInsuranceRequestBody req) throws ParseException;
 
+    @Transactional
+    void deleteOrder(User user, Map<String, Object> params);
+
     void exportExcel(HttpServletResponse response, User user, Map<String, Object> params) throws IOException;
 }
