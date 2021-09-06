@@ -133,6 +133,10 @@
             <if test="id != null">
                 and o.id = #{id}
             </if>
+
+            <if test="licensePlate != null and licensePlate != ''">
+                and dl.plate_number like #{licensePlate}
+            </if>
         </where>
         ORDER BY o.create_at DESC
         <if test="limit != null and offset != null">
@@ -141,21 +145,39 @@
     </select>
 
     <select id="getOrderCount" resultType="Integer">
-        SELECT count(*)
-        FROM orders
+        SELECT count(t.oid)
+        FROM (SELECT o.id oid
+        FROM orders o
+        LEFT JOIN driving_licenses dl ON o.id = dl.order_id
         <where>
             <if test="userId != null and userId != 0">
-                and create_by = #{userId}
+                and o.create_by = #{userId}
             </if>
 
             <if test="filterStartTime != null and filterStartTime != ''">
-                and DATE(create_at) >= #{filterStartTime}
+                and DATE(o.create_at) >= #{filterStartTime}
             </if>
 
             <if test="filterEndTime != null and filterEndTime != ''">
-                and DATE(create_at) &lt;= #{filterEndTime}
+                and DATE(o.create_at) &lt;= #{filterEndTime}
+            </if>
+
+            <if test="ids != null">
+                and o.id in
+                <foreach collection="ids" item="id" open="(" close=")" separator=",">
+                    #{id}
+                </foreach>
+            </if>
+
+            <if test="id != null">
+                and o.id = #{id}
+            </if>
+
+            <if test="licensePlate != null and licensePlate != ''">
+                and dl.plate_number like #{licensePlate}
             </if>
         </where>
+        )t
     </select>
 
     <select id="getOrderById" resultMap="orderGetMap">
