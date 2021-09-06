@@ -56,4 +56,10 @@
         SELECT count(*)
         FROM policies
     </select>
+
+    <delete id="deletePolicy">
+        DELETE
+        FROM policies
+        WHERE id = #{id}
+    </delete>
 </mapper>

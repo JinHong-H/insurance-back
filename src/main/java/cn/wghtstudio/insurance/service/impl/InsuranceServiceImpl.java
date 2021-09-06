@@ -67,13 +67,19 @@ public class InsuranceServiceImpl implements InsuranceService {
     BusinessLicenseRepository businessLicenseRepository;
 
     @Resource
-    PolicyRepository policyRepository;
-
-    @Resource
     DrivingLicenseRepository drivingLicenseRepository;
 
     @Resource
     CertificateRepository certificateRepository;
+
+    @Resource
+    PolicyRepository policyRepository;
+
+    @Resource
+    OverInsurancePolicyRepository overInsurancePolicyRepository;
+
+    @Resource
+    OverInsurancePolicyPicRepository overInsurancePolicyPicRepository;
 
     @Resource
     OtherFileRepository otherFileRepository;
@@ -258,6 +264,48 @@ public class InsuranceServiceImpl implements InsuranceService {
         if (req.getOtherFileId() != null) {
             otherFileRepository.updateOtherFiles(Map.of("orderId", orderId, "otherIds", req.getOtherFileId()));
         }
+    }
+
+    @Override
+    @Transactional
+    public void deleteOrder(User user, Map<String, Object> params) {
+        // 得到对应用户的实体
+        GetOrderInfo getOrderInfo = GetOrderInfoFactory.getOrderInfo(user.getRole().getValue(), orderRepository);
+        Order order = getOrderInfo.getOrderDetail(user, params);
+
+        System.out.println(order);
+
+        // 依次删除文件
+        if (order.getIdCard() != null) {
+            idCardRepository.deleteIdCard(order.getIdCard().getId());
+        }
+
+        if (order.getBusinessLicense() != null) {
+            businessLicenseRepository.deleteBusinessLicense(order.getBusinessLicense().getId());
+        }
+
+        if (order.getDrivingLicense() != null) {
+            System.out.println("delete");
+            drivingLicenseRepository.deleteDrivingLicense(order.getDrivingLicense().getId());
+        }
+
+        if (order.getCertificate() != null) {
+            certificateRepository.deleteCertificate(order.getCertificate().getId());
+        }
+
+        if (order.getPolicy() != null) {
+            policyRepository.deletePolicy(order.getPolicy().getId());
+        }
+
+        if (order.getOverInsurancePolicy() != null) {
+            overInsurancePolicyRepository.deleteOverInsurancePolicy(order.getOverInsurancePolicy().getId());
+        }
+
+        if (order.getOverInsurancePolicyPic() != null) {
+            overInsurancePolicyPicRepository.deleteOverInsurancePolicyPic(order.getOverInsurancePolicyPic().getId());
+        }
+
+        orderRepository.deleteOrderById(order.getId());
     }
 
     @Override

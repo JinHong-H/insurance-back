@@ -12,4 +12,6 @@ public interface DrivingLicenseRepository {
     void updateDrivingLicense(DrivingLicense drivingLicense);
 
     List<DrivingLicense> getDrivingLicenseByPolicyInfo(DrivingLicense drivingLicense);
+
+    void deleteDrivingLicense(int id);
 }

@@ -27,4 +27,10 @@
         </set>
         WHERE id = #{id}
     </update>
+
+    <delete id="deleteIdCard">
+        DELETE
+        FROM id_cards
+        WHERE id = #{id}
+    </delete>
 </mapper>

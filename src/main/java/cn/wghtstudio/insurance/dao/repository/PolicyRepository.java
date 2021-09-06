@@ -17,4 +17,6 @@ public interface PolicyRepository {
     List<Policy> selectPolicyByOrderId(Integer orderID);
 
     Integer getPolicyCount();
+
+    void deletePolicy(int id);
 }
