@@ -87,6 +87,9 @@
             <result property="name" column="oipcname"/>
             <result property="orderId" column="oipcoid"/>
         </association>
+
+        <collection property="otherFileList" column="{orderId=oid}"
+                    select="cn.wghtstudio.insurance.dao.repository.OtherFileRepository.getOtherFilesByOrderId"/>
     </resultMap>
 
     <select id="getOrderByUser" resultMap="orderMap">
