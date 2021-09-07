@@ -18,6 +18,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,22 +45,30 @@ public class InsuranceController {
             @RequestParam(value = "licensePlate", required = false) String licensePlate,
             @RequestParam(defaultValue = "false", value = "accurate") Boolean accurate
     ) {
-        try {
-            Map<String, Object> params = new HashMap<>() {
-                {
-                    put("limit", pageSize);
-                    put("current", current);
-                    put("id", id);
-                    put("offset", (current - 1) * pageSize);
-                    put("filterStartTime", filterStartTime);
-                    put("filterEndTime", filterEndTime);
-                }
-            };
-
-            if (licensePlate != null) {
-                params.put("licensePlate", accurate ? licensePlate : "%" + licensePlate + "%");
+        Map<String, Object> params = new HashMap<>() {
+            {
+                put("limit", pageSize);
+                put("current", current);
+                put("id", id);
+                put("offset", (current - 1) * pageSize);
+                put("filterStartTime", filterStartTime);
+                put("filterEndTime", filterEndTime);
             }
+        };
 
+        if (licensePlate != null) {
+            params.put("licensePlate", accurate ? licensePlate : "%" + licensePlate + "%");
+        }
+
+        if (filterEndTime == null && filterStartTime == null) {
+            LocalDateTime dateTime = LocalDateTime.now();
+            dateTime = dateTime.withHour(0).withMinute(0).withSecond(0).minusMinutes(13 * 30);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String defaultTime = formatter.format(dateTime);
+            params.put("defaultTime", defaultTime);
+        }
+
+        try {
             GetInsuranceListResponseBody body = insuranceService.getAllList(user, params);
             return Result.success(body);
         } catch (Exception e) {

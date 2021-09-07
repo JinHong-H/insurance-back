@@ -127,6 +127,10 @@
                 and DATE(o.create_at) &lt;= #{filterEndTime}
             </if>
 
+            <if test="defaultTime != null and defaultTime != ''">
+                and o.create_at >= #{defaultTime}
+            </if>
+
             <if test="ids != null">
                 and o.id in
                 <foreach collection="ids" item="id" open="(" close=")" separator=",">
@@ -164,6 +168,10 @@
 
             <if test="filterEndTime != null and filterEndTime != ''">
                 and DATE(o.create_at) &lt;= #{filterEndTime}
+            </if>
+
+            <if test="defaultTime != null and defaultTime != ''">
+                and o.create_at >= #{defaultTime}
             </if>
 
             <if test="ids != null">
