@@ -9,6 +9,8 @@ import cn.wghtstudio.insurance.util.LicensePlateWhenNewFactory;
 import lombok.Builder;
 import lombok.Data;
 import okhttp3.*;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
@@ -20,8 +22,6 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 @Component
 public class DownloadServiceImpl implements DownloadService {
@@ -188,7 +188,7 @@ public class DownloadServiceImpl implements DownloadService {
         final CountDownLatch countDownLatch = new CountDownLatch(count);
         final OkHttpClient client = new OkHttpClient();
 
-        try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
+        try (ZipArchiveOutputStream zipOutputStream = new ZipArchiveOutputStream(outputStream)) {
             for (Map.Entry<String, List<CompressItem>> node : folder.entrySet()) {
                 for (CompressItem compressItem : node.getValue()) {
                     final Request request = new Request.Builder().url(compressItem.getUrl()).build();
@@ -204,9 +204,10 @@ public class DownloadServiceImpl implements DownloadService {
                             lock.lock();
                             try {
                                 final byte[] body = Objects.requireNonNull(response.body()).bytes();
-                                zipOutputStream.putNextEntry(new ZipEntry(node.getKey() + "/" + compressItem.getName()));
+                                ZipArchiveEntry entry = new ZipArchiveEntry(node.getKey() + "/" + compressItem.getName());
+                                zipOutputStream.putArchiveEntry(entry);
                                 zipOutputStream.write(body);
-                                zipOutputStream.closeEntry();
+                                zipOutputStream.closeArchiveEntry();
                                 countDownLatch.countDown();
                             } finally {
                                 lock.unlock();
