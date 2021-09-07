@@ -13,6 +13,8 @@ import cn.wghtstudio.insurance.util.pdf.*;
 import com.itextpdf.text.DocumentException;
 import lombok.Builder;
 import lombok.Data;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,15 +28,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 @Data
 @Builder
@@ -468,21 +465,21 @@ class PolicyDealImpl implements Runnable {
             logger.warn("OCRException", e);
             Policy policy = Policy.builder().
                     id(policyId).
-                    processType(5).
+                    processType(6).
                     build();
             policyRepository.updatePolicy(policy);
         } catch (IOException e) {
             logger.warn("IOException", e);
             Policy policy = Policy.builder().
                     id(policyId).
-                    processType(5).
+                    processType(7).
                     build();
             policyRepository.updatePolicy(policy);
         } catch (Exception e) {
             logger.warn("Exception", e);
             Policy policy = Policy.builder().
                     id(policyId).
-                    processType(5).
+                    processType(8).
                     build();
             policyRepository.updatePolicy(policy);
         }
@@ -518,38 +515,30 @@ public class OcrInfoImpl implements OcrInfoService {
     @Resource
     private OverInsurancePolicyPicRepository overInsurancePolicyPicRepository;
 
-    private final ExecutorService executorService = new ThreadPoolExecutor(
-            4,
-            10,
-            60L,
-            TimeUnit.SECONDS,
-            new SynchronousQueue<>()
-    );
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
 
     private List<PolicyDealParams> unzipFile(MultipartFile file) throws IOException {
         List<PolicyDealParams> params = new ArrayList<>();
-        ZipInputStream zipInputStream = new ZipInputStream(file.getInputStream());
-        ZipEntry zipEntry;
 
-        while ((zipEntry = zipInputStream.getNextEntry()) != null && !zipEntry.isDirectory()) {
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        try (ZipArchiveInputStream zip = new ZipArchiveInputStream(file.getInputStream())) {
+            ZipArchiveEntry zipArchiveEntry;
+            while ((zipArchiveEntry = zip.getNextZipEntry()) != null && !zipArchiveEntry.isDirectory()) {
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-            byte[] bytes = new byte[1024];
-            int len;
-            while ((len = zipInputStream.read(bytes)) != -1) {
-                byteArrayOutputStream.write(bytes, 0, len);
+                byte[] bytes = new byte[1024];
+                int len;
+                while ((len = zip.read(bytes)) != -1) {
+                    byteArrayOutputStream.write(bytes, 0, len);
+                }
+
+                byteArrayOutputStream.flush();
+                byteArrayOutputStream.close();
+                params.add(PolicyDealParams.builder().
+                        name(zipArchiveEntry.getName()).
+                        file(byteArrayOutputStream.toByteArray()).
+                        build());
             }
-
-            byteArrayOutputStream.flush();
-            byteArrayOutputStream.close();
-            zipInputStream.closeEntry();
-            params.add(PolicyDealParams.builder().
-                    name(zipEntry.getName()).
-                    file(byteArrayOutputStream.toByteArray()).
-                    build());
         }
-
-        zipInputStream.close();
 
         return params;
     }
