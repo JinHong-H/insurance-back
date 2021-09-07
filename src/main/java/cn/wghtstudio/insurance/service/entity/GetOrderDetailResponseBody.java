@@ -35,6 +35,7 @@ public class GetOrderDetailResponseBody {
     @Builder
     public static class Certificate {
         private String url;
+        private String type;
         private String frame;
         private String engine;
     }

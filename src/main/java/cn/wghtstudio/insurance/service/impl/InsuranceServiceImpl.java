@@ -154,6 +154,7 @@ public class InsuranceServiceImpl implements InsuranceService {
             builder.licensePlate(LicensePlateWhenNewFactory.getLicensePlateWhenNew(certificate.getEngine()));
             builder.certificate(GetOrderDetailResponseBody.Certificate.builder().
                     url(certificate.getUrl()).
+                    type(certificate.getCarType()).
                     frame(certificate.getFrame()).
                     engine(certificate.getEngine()).
                     build());
@@ -254,6 +255,7 @@ public class InsuranceServiceImpl implements InsuranceService {
             CreateInsuranceRequestBody.CertificateRequestBody body = req.getCertificate();
             Certificate certificate = Certificate.builder().
                     id(body.getId()).
+                    carType(body.getType()).
                     engine(body.getEngine()).
                     frame(body.getFrame()).
                     orderId(orderId).

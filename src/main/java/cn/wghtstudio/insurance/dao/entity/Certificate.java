@@ -9,6 +9,7 @@ import lombok.experimental.Tolerate;
 public class Certificate {
     private Integer id;
     private String url;
+    private String carType;
     private String engine;
     private String frame;
     private Integer orderId;

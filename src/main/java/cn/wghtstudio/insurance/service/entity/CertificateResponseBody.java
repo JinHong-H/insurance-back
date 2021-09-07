@@ -8,6 +8,7 @@ import lombok.Data;
 @Builder
 public class CertificateResponseBody {
     private int id;
+    private String carType;
     private String engine;
     private String frame;
 }
