@@ -275,8 +275,6 @@ public class InsuranceServiceImpl implements InsuranceService {
         GetOrderInfo getOrderInfo = GetOrderInfoFactory.getOrderInfo(user.getRole().getValue(), orderRepository);
         Order order = getOrderInfo.getOrderDetail(user, params);
 
-        System.out.println(order);
-
         // 依次删除文件
         if (order.getIdCard() != null) {
             idCardRepository.deleteIdCard(order.getIdCard().getId());
