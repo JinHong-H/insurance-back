@@ -7,6 +7,7 @@ import cn.wghtstudio.insurance.exception.RecordNotFoundException;
 import cn.wghtstudio.insurance.service.InsuranceService;
 import cn.wghtstudio.insurance.service.entity.*;
 import cn.wghtstudio.insurance.util.FormatDate;
+import cn.wghtstudio.insurance.util.JudgeUserUtil;
 import cn.wghtstudio.insurance.util.LicensePlateWhenNewFactory;
 import cn.wghtstudio.insurance.util.excel.ExcelColumn;
 import cn.wghtstudio.insurance.util.excel.ExcelUtil;
@@ -53,6 +54,15 @@ class ExportColumnItem {
 
     @ExcelColumn(value = "保单号", column = 8)
     private String policy;
+
+    @ExcelColumn(value = "付费方式", column = 9)
+    private String paymentType;
+
+    @ExcelColumn(value = "车型", column = 10)
+    private String carType;
+
+    @ExcelColumn(value = "创建者", column = 11)
+    private String creatBy;
 }
 
 @Component
@@ -350,7 +360,11 @@ public class InsuranceServiceImpl implements InsuranceService {
             if (item.getPolicy() != null) {
                 builder.policy(item.getPolicy().getNumber());
             }
-
+            builder.paymentType(item.getPayment().getName());
+            builder.carType(item.getCarType().getName());
+            if (JudgeUserUtil.isAdmin(user.getRole().getValue())) {
+                builder.creatBy(item.getUser().getNickname());
+            }
             exportColumnItems.add(builder.build());
         });
 
