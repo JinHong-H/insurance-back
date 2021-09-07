@@ -8,52 +8,18 @@ import cn.wghtstudio.insurance.service.InsuranceService;
 import cn.wghtstudio.insurance.service.entity.*;
 import cn.wghtstudio.insurance.util.FormatDate;
 import cn.wghtstudio.insurance.util.LicensePlateWhenNewFactory;
-import cn.wghtstudio.insurance.util.excel.ExcelColumn;
-import cn.wghtstudio.insurance.util.excel.ExcelUtil;
-import lombok.Builder;
-import lombok.Data;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Data
-@Builder
-class ExportColumnItem {
-    @ExcelColumn(value = "序号", column = 1)
-    private Integer number;
-
-    @ExcelColumn(value = "车牌号", column = 2)
-    private String licensePlate;
-
-    @ExcelColumn(value = "车架号", column = 3)
-    private String frame;
-
-    @ExcelColumn(value = "发动机号", column = 4)
-    private String engine;
-
-    @ExcelColumn(value = "车主", column = 5)
-    private String owner;
-
-    @ExcelColumn(value = "起保时间", column = 6)
-    private String startTime;
-
-    @ExcelColumn(value = "地址", column = 7)
-    private String address;
-
-    @ExcelColumn(value = "保单号", column = 8)
-    private String policy;
-}
 
 @Component
 public class InsuranceServiceImpl implements InsuranceService {
@@ -316,53 +282,6 @@ public class InsuranceServiceImpl implements InsuranceService {
         GetOrderInfo getOrderInfo = GetOrderInfoFactory.getOrderInfo(user.getRole().getValue(), orderRepository);
 
         // 得到订单列表
-        List<Order> orderList = getOrderInfo.getALLOrderList(user, params);
-
-        // 处理订单符合返回数据
-        List<ExportColumnItem> exportColumnItems = new ArrayList<>();
-        orderList.forEach((item) -> {
-            ExportColumnItem.ExportColumnItemBuilder builder = ExportColumnItem.builder();
-            builder.number(exportColumnItems.size() + 1).
-                    startTime(FormatDate.getFormatDate(item.getStartTime()));
-
-            if (item.getIdCard() != null) {
-                IdCard idCard = item.getIdCard();
-                builder.owner(idCard.getName()).
-                        address(idCard.getAddress());
-            } else if (item.getBusinessLicense() != null) {
-                BusinessLicense businessLicense = item.getBusinessLicense();
-                builder.owner(businessLicense.getName()).
-                        address(businessLicense.getAddress());
-            }
-
-            if (item.getDrivingLicense() != null) {
-                DrivingLicense drivingLicense = item.getDrivingLicense();
-                builder.licensePlate(drivingLicense.getPlateNumber()).
-                        frame(drivingLicense.getFrame()).
-                        engine(drivingLicense.getEngine());
-            } else if (item.getCertificate() != null) {
-                Certificate certificate = item.getCertificate();
-                builder.licensePlate(LicensePlateWhenNewFactory.getLicensePlateWhenNew(item.getCertificate().getEngine())).
-                        frame(certificate.getFrame()).
-                        engine(certificate.getEngine());
-            }
-
-            if (item.getPolicy() != null) {
-                builder.policy(item.getPolicy().getNumber());
-            }
-
-            exportColumnItems.add(builder.build());
-        });
-
-        Workbook wb = ExcelUtil.export(exportColumnItems, ExportColumnItem.class);
-        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        response.setHeader("Content-disposition", "attachment;filename=export.xlsx");
-        response.flushBuffer();
-
-        OutputStream outputStream = response.getOutputStream();
-        wb.write(outputStream);
-        wb.close();
-        outputStream.flush();
-        outputStream.close();
+        getOrderInfo.exportExcelItem(response, user, params);
     }
 }

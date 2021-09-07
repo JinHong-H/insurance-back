@@ -5,10 +5,7 @@ import cn.wghtstudio.insurance.dao.repository.OrderRepository;
 import cn.wghtstudio.insurance.service.entity.GetInsuranceListItem;
 import cn.wghtstudio.insurance.util.FormatDate;
 import cn.wghtstudio.insurance.util.LicensePlateWhenNewFactory;
-import cn.wghtstudio.insurance.util.excel.ExcelColumn;
 import cn.wghtstudio.insurance.util.excel.ExcelUtil;
-import lombok.Builder;
-import lombok.Data;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import javax.servlet.http.HttpServletResponse;
@@ -19,16 +16,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class NormalGetOrderInfo extends GetOrderInfo {
+public class CompanyGetOrderInfo extends GetOrderInfo {
     OrderRepository orderRepository;
 
-    public NormalGetOrderInfo(OrderRepository orderRepository) {
+    public CompanyGetOrderInfo(OrderRepository orderRepository) {
         this.orderRepository = orderRepository;
     }
 
     @Override
     public List<Order> getALLOrderList(User user, Map<String, Object> params) {
-        params.put("userId", user.getId());
         return orderRepository.getOrderByUser(params);
     }
 
@@ -38,6 +34,7 @@ public class NormalGetOrderInfo extends GetOrderInfo {
 
         return orders.stream().map(item -> {
             GetInsuranceListItem.GetInsuranceListItemBuilder itemBuilder = GetInsuranceListItem.builder();
+            itemBuilder.username(item.getUser().getNickname());
 
             return getGetInsuranceListItem(item, itemBuilder);
         }).collect(Collectors.toList());
@@ -45,14 +42,12 @@ public class NormalGetOrderInfo extends GetOrderInfo {
 
     @Override
     public Order getOrderDetail(User user, Map<String, Object> params) {
-        params.put("userId", user.getId());
         List<Order> orders = orderRepository.getOrderByUser(params);
         return orders.get(0);
     }
 
     @Override
     public Integer getALLOrderListCount(User user, Map<String, Object> params) {
-        params.put("userId", user.getId());
         return orderRepository.getOrderCount(params);
     }
 
@@ -100,6 +95,7 @@ public class NormalGetOrderInfo extends GetOrderInfo {
         });
 
         Workbook wb = ExcelUtil.export(exportColumnItems, BaseExportColumnItem.class);
+
         writeToResponse(response, wb);
     }
 }

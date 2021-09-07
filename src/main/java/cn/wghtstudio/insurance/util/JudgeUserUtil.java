@@ -9,4 +9,8 @@ public class JudgeUserUtil {
     public static boolean isNormal(int auth) {
         return (JudgeUserUtil.normalAuth & auth) != 0;
     }
+
+    public static boolean isCompany(int auth) {
+        return (JudgeUserUtil.companyAuth & auth) != 0;
+    }
 }

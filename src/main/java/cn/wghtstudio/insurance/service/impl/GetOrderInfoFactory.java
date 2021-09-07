@@ -9,6 +9,10 @@ public class GetOrderInfoFactory {
             return new NormalGetOrderInfo(orderRepository);
         }
 
+        if (JudgeUserUtil.isCompany(auth)) {
+            return new CompanyGetOrderInfo(orderRepository);
+        }
+
         return new RootGetOrderInfo(orderRepository);
     }
 }
