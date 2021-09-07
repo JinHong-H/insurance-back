@@ -261,7 +261,7 @@ public class InsuranceServiceImpl implements InsuranceService {
             certificateRepository.updateCertificate(certificate);
         }
 
-        if (req.getOtherFileId() != null) {
+        if (req.getOtherFileId() != null && req.getOtherFileId().size() > 0) {
             otherFileRepository.updateOtherFiles(Map.of("orderId", orderId, "otherIds", req.getOtherFileId()));
         }
     }
