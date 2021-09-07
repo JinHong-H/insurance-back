@@ -14,7 +14,7 @@
     </insert>
 
     <update id="updateOtherFiles">
-        UPDATE certificates
+        UPDATE other_file
         <set>
             <if test="orderId != null">
                 order_id = #{orderId},
