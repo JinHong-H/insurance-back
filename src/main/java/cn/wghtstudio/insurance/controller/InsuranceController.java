@@ -38,6 +38,7 @@ public class InsuranceController {
             @RequestParam(defaultValue = "1", value = "current") Integer current,
             @RequestParam(value = "startTime", required = false) String filterStartTime,
             @RequestParam(value = "endTime", required = false) String filterEndTime,
+            @RequestParam(value = "id", required = false) Integer id,
             @RequestParam(value = "licensePlate", required = false) String licensePlate,
             @RequestParam(defaultValue = "false", value = "accurate") Boolean accurate
     ) {
@@ -46,6 +47,7 @@ public class InsuranceController {
                 {
                     put("limit", pageSize);
                     put("current", current);
+                    put("id", id);
                     put("offset", (current - 1) * pageSize);
                     put("filterStartTime", filterStartTime);
                     put("filterEndTime", filterEndTime);

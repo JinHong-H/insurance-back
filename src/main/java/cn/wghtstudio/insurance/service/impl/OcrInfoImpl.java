@@ -300,12 +300,12 @@ class PolicyDealImpl implements Runnable {
 
         for (String item : time) {
             if (!dataMap.containsKey("mon1")) {
-                dataMap.put("year1",item.substring(0,4));
+                dataMap.put("year1", item.substring(0, 4));
                 dataMap.put("mon1", item.substring(5, 7));
                 dataMap.put("day1", item.substring(8, 10));
                 continue;
             }
-            dataMap.put("year2",item.substring(0,4));
+            dataMap.put("year2", item.substring(0, 4));
             dataMap.put("mon2", item.substring(5, 7));
             dataMap.put("day2", item.substring(8, 10));
         }
@@ -634,6 +634,7 @@ public class OcrInfoImpl implements OcrInfoService {
         final CertificateResponse.WordsResult wordsResult = response.getWordsResult();
         Certificate certificate = Certificate.builder().
                 url(url).
+                carType(wordsResult.getCarName()).
                 engine(wordsResult.getEngineNo()).
                 frame(wordsResult.getVinNo()).
                 build();
@@ -642,6 +643,7 @@ public class OcrInfoImpl implements OcrInfoService {
 
         return CertificateResponseBody.builder().
                 id(certificate.getId()).
+                carType(certificate.getCarType()).
                 engine(certificate.getEngine()).
                 frame(certificate.getFrame()).
                 build();

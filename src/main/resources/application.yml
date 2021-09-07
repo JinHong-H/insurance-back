@@ -19,8 +19,8 @@ token:
   secret: InsuranceBack
 
 ocr:
-  apiKey: 6v7zqa2sHU1B5fHObGDQiGi3
-  secretKey: 8vi1ZOopPZZUEsDV9BONFex57M5V7B9g
+  apiKey: tBjGONPBGD68WLEQL5iOWcCM
+  secretKey: gmlsWtjTUDKh4AY2zpHpZGEvRMKeWSsZ
 
 aliyun:
   accessKeyID: LTAI5tRKpksmrwZiJuzQSJqj

@@ -4,6 +4,7 @@
     <resultMap id="certificateMap" type="Certificate">
         <id property="id" column="id"/>
         <result property="url" column="url"/>
+        <result property="carType" column="car_type"/>
         <result property="engine" column="engine"/>
         <result property="frame" column="frame"/>
         <result property="orderId" column="order_id"/>
@@ -11,8 +12,8 @@
 
     <insert id="createCertificate" parameterType="Certificate" useGeneratedKeys="true" keyProperty="id"
             keyColumn="id">
-        INSERT INTO certificates(url, engine, frame)
-        values (#{url}, #{engine}, #{frame})
+        INSERT INTO certificates(url, car_type, engine, frame)
+        values (#{url}, #{carType}, #{engine}, #{frame})
     </insert>
 
     <update id="updateCertificate" parameterType="Certificate">
@@ -20,6 +21,9 @@
         <set>
             <if test="url != null">
                 url = #{url},
+            </if>
+            <if test="carType != null">
+                car_type = #{carType},
             </if>
             <if test="engine != null">
                 engine = #{engine},
@@ -35,7 +39,7 @@
     </update>
 
     <select id="getCertificateByPolicyInfo" resultMap="certificateMap">
-        SELECT engine, frame, order_id
+        SELECT id, car_type, engine, frame, order_id
         FROM certificates
         <where>
             <if test="engine != null and engine != ''">

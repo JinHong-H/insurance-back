@@ -40,6 +40,7 @@ public class CreateInsuranceRequestBody {
     public static class CertificateRequestBody {
         @NotNull
         private Integer id;
+        private String type;
         private String engine;
         private String frame;
     }

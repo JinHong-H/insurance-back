@@ -56,6 +56,7 @@
         <association property="certificate" javaType="Certificate">
             <id property="id" column="cid"/>
             <result property="url" column="curl"/>
+            <result property="carType" column="cct"/>
             <result property="engine" column="cengine"/>
             <result property="frame" column="cframe"/>
             <result property="orderId" column="coid"/>
@@ -97,7 +98,7 @@
         SELECT o.id oid, o.create_at, o.create_by, o.start_time, o.file_type, o.payment_id, o.car_type_id,
         id.id idid, id.url idurl, id.name idname, id.number idnumber, id.address idaddress, id.order_id idoid,
         bl.id blid, bl.url blurl, bl.name blname, bl.address bladdress, bl.number blnumber, bl.order_id bloid,
-        c.id cid, c.url curl, c.engine cengine, c.frame cframe, c.order_id coid,
+        c.id cid, c.url curl, c.car_type cct, c.engine cengine, c.frame cframe, c.order_id coid,
         dl.id dlid, dl.url dlurl, dl.owner dlowner, dl.plate_number dlpn, dl.engine dlengine, dl.frame dlframe,
         dl.type dltype, dl.order_id dloid,
         p.id pid, p.url purl, p.name pname, p.number pnumber, p.order_id poid,
