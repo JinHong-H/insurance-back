@@ -28,7 +28,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -61,6 +62,7 @@ class PolicyDealImpl implements Runnable {
     private final OverInsurancePolicyRepository overInsurancePolicyRepository;
 
     private final OverInsurancePolicyPicRepository overInsurancePolicyPicRepository;
+    private final String originNumber;
 
     private String number = null, plateNumber = null, frame = null, engine = null;
 
@@ -93,7 +95,7 @@ class PolicyDealImpl implements Runnable {
 
     @Nullable
     private String getFrameNumber(String words) {
-        Pattern pattern = Pattern.compile("车架号\\s?[:：]\\s?([A-Z]{3}[A-z0-9]{14})");
+        Pattern pattern = Pattern.compile("车架号\\s?[:：]\\s?([A-Z]{3}[A-Z0-9]{14})");
         Matcher matcher = pattern.matcher(words);
         if (matcher.find()) {
             return matcher.group(1);
@@ -103,7 +105,7 @@ class PolicyDealImpl implements Runnable {
 
     @Nullable
     private String getEngineNumber(String words) {
-        Pattern pattern = Pattern.compile("发动机号\\s?[:：]\\s?([A-Z0-9]{6,11})");
+        Pattern pattern = Pattern.compile("发动机号\\s?[:：]\\s?([A-Z0-9]{6,18})");
         Matcher matcher = pattern.matcher(words);
         if (matcher.find()) {
             return matcher.group(1);
@@ -154,9 +156,14 @@ class PolicyDealImpl implements Runnable {
         return splitNames[splitNames.length - 2] + UUID.randomUUID() + ".pdf";
     }
 
-    private String getOverInsurancePolicyName(String originName) {
+    private String getOriginNumber(String originName) {
         final String[] splitNames = originName.replace("policy/", "").split("\\.");
-        return splitNames[splitNames.length - 2] + UUID.randomUUID() + ".pdf";
+        return splitNames[splitNames.length - 2];
+    }
+
+    private String getOverInsurancePolicyName(String originName) {
+        final String[] splitNames = originName.split("\\.");
+        return splitNames[splitNames.length - 2];
     }
 
     private String getOverInsurancePolicyPicBaseName(String originName) {
@@ -168,6 +175,7 @@ class PolicyDealImpl implements Runnable {
         Policy policyBeforePut = Policy.builder().
                 id(policyId).
                 processType(1).
+                number(originNumber).
                 build();
 
         policyRepository.updatePolicy(policyBeforePut);
@@ -262,7 +270,6 @@ class PolicyDealImpl implements Runnable {
                     name.add(words.replace(tmp, ""));
                 }
             }
-
             if (company.size() < 2) {
                 String tmp = getCompanyNumber(words);
                 if (tmp != null) {
@@ -322,11 +329,11 @@ class PolicyDealImpl implements Runnable {
 
         dataMap.put("allinfo", allInfos);
 
-        Policy policy = Policy.builder().
-                id(policyId).
-                number(number).
-                build();
-        policyRepository.updatePolicy(policy);
+        //Policy policy = Policy.builder().
+        //    id(policyId).
+        //    number(getOriginNumber(OSSPath)).
+        //    build();
+        //policyRepository.updatePolicy(policy);
     }
 
     private boolean checkPolicyAndUpdate(Integer orderId) {
@@ -376,9 +383,9 @@ class PolicyDealImpl implements Runnable {
     }
 
     private void generateOverInsurancePolicy() throws IOException, PdfMakeErrorException {
-        if (dataMap.size() < 11) {
-            throw new OCRException();
-        }
+        //if (dataMap.size() < 11) {
+        //    throw new OCRException();
+        //}
         // 生成印章
         boolean isOfficial = judgeOfficialMode(orderId);
         if (isOfficial) {
@@ -433,6 +440,7 @@ class PolicyDealImpl implements Runnable {
         this.OSSPath = "policy/" + getPolicyName(params.getName());
         this.file = params.getFile();
         this.policyId = params.getId();
+        this.originNumber = getOriginNumber(params.getName());
 
         this.policyRepository = policyRepository;
         this.drivingLicenseRepository = drivingLicenseRepository;
